@@ -1,0 +1,11 @@
+{
+  "name": "web-sync",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "echo \"web-sync is scaffolded as a placeholder until Fase 6 (see noazul-blueprint.md secao 4)\" && exit 0",
+    "lint": "echo \"(no lint configured yet)\"",
+    "typecheck": "echo \"(no typecheck configured yet)\"",
+    "test": "echo \"(no tests yet)\""
+  }
+}
