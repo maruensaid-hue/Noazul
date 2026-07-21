@@ -6,8 +6,15 @@ import { CategoryPickerModal } from "../../components/ui/CategoryPickerModal";
 import { SegmentedControl } from "../../components/ui/SegmentedControl";
 import { dateToLocalDateString, localDateStringToDate, yearMonthLabel } from "../../lib/dates";
 import { brlToCents } from "../../lib/money";
+import { MAX_INSTALLMENTS, MIN_INSTALLMENTS, RECURRENCE_MONTHS_AHEAD } from "../../lib/recurrence";
 import type { CategoryRow } from "../categories/repository";
-import { transactionInputSchema, type TransactionInput, type TxStatus, type TxType } from "./types";
+import {
+  transactionInputSchema,
+  type RecurrenceSelection,
+  type TransactionInput,
+  type TxStatus,
+  type TxType,
+} from "./types";
 
 export interface TransactionFormValues {
   name: string;
@@ -23,7 +30,9 @@ interface TransactionFormProps {
   categories: CategoryRow[];
   submitLabel: string;
   isSubmitting: boolean;
-  onSubmit: (input: TransactionInput) => void;
+  /** Only offered when creating a brand new transaction, never when editing an occurrence. */
+  showRecurrenceOptions?: boolean;
+  onSubmit: (input: TransactionInput, recurrence: RecurrenceSelection) => void;
   onDelete?: () => void;
 }
 
@@ -37,11 +46,18 @@ const STATUS_OPTIONS = [
   { value: "PAID" as const, label: "Pago" },
 ];
 
+const RECURRENCE_OPTIONS = [
+  { value: "single" as const, label: "Única" },
+  { value: "fixed" as const, label: "Fixa mensal" },
+  { value: "installment" as const, label: "Parcelada" },
+];
+
 export function TransactionForm({
   initialValues,
   categories,
   submitLabel,
   isSubmitting,
+  showRecurrenceOptions = false,
   onSubmit,
   onDelete,
 }: TransactionFormProps) {
@@ -53,6 +69,8 @@ export function TransactionForm({
   const [categoryId, setCategoryId] = useState<string | null>(initialValues.categoryId);
   const [showCategoryPicker, setShowCategoryPicker] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
+  const [recurrenceMode, setRecurrenceMode] = useState<RecurrenceSelection["mode"]>("single");
+  const [installmentsInput, setInstallmentsInput] = useState("2");
   const [error, setError] = useState<string | null>(null);
 
   const selectedCategory = useMemo(
@@ -90,8 +108,24 @@ export function TransactionForm({
       return;
     }
 
+    let recurrence: RecurrenceSelection = { mode: "single" };
+    if (showRecurrenceOptions && recurrenceMode === "fixed") {
+      recurrence = { mode: "fixed" };
+    } else if (showRecurrenceOptions && recurrenceMode === "installment") {
+      const installments = Number(installmentsInput);
+      if (
+        !Number.isInteger(installments) ||
+        installments < MIN_INSTALLMENTS ||
+        installments > MAX_INSTALLMENTS
+      ) {
+        setError(`Informe entre ${MIN_INSTALLMENTS} e ${MAX_INSTALLMENTS} parcelas`);
+        return;
+      }
+      recurrence = { mode: "installment", installments };
+    }
+
     setError(null);
-    onSubmit(result.data);
+    onSubmit(result.data, recurrence);
   }
 
   return (
@@ -117,7 +151,9 @@ export function TransactionForm({
       </View>
 
       <View className="gap-2">
-        <Text className="text-sm font-medium text-gray-600">Valor (R$)</Text>
+        <Text className="text-sm font-medium text-gray-600">
+          {recurrenceMode === "installment" ? "Valor da parcela (R$)" : "Valor (R$)"}
+        </Text>
         <TextInput
           value={amountInput}
           onChangeText={setAmountInput}
@@ -128,7 +164,9 @@ export function TransactionForm({
       </View>
 
       <View className="gap-2">
-        <Text className="text-sm font-medium text-gray-600">Vencimento</Text>
+        <Text className="text-sm font-medium text-gray-600">
+          {recurrenceMode === "single" ? "Vencimento" : "Primeiro vencimento"}
+        </Text>
         <Pressable
           onPress={() => setShowDatePicker(true)}
           className="rounded-lg border border-gray-200 px-3 py-3"
@@ -144,6 +182,30 @@ export function TransactionForm({
           />
         ) : null}
       </View>
+
+      {showRecurrenceOptions ? (
+        <View className="gap-2">
+          <Text className="text-sm font-medium text-gray-600">Repetição</Text>
+          <SegmentedControl options={RECURRENCE_OPTIONS} value={recurrenceMode} onChange={setRecurrenceMode} />
+          {recurrenceMode === "fixed" ? (
+            <Text className="text-xs text-gray-400">
+              Cria lançamentos para os próximos {RECURRENCE_MONTHS_AHEAD} meses, na mesma data a
+              cada mês.
+            </Text>
+          ) : null}
+          {recurrenceMode === "installment" ? (
+            <View className="flex-row items-center gap-3">
+              <Text className="text-sm text-gray-600">Número de parcelas</Text>
+              <TextInput
+                value={installmentsInput}
+                onChangeText={setInstallmentsInput}
+                keyboardType="number-pad"
+                className="w-20 rounded-lg border border-gray-200 px-3 py-2 text-base"
+              />
+            </View>
+          ) : null}
+        </View>
+      ) : null}
 
       <View className="gap-2">
         <Text className="text-sm font-medium text-gray-600">Categoria</Text>

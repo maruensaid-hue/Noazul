@@ -8,11 +8,13 @@ import { TransactionCard } from "../../../src/components/ui/TransactionCard";
 import { useCategories } from "../../../src/features/categories/queries";
 import {
   useDeleteTransaction,
+  useDeleteTransactionSeries,
   useDuplicateTransaction,
   useMonthTransactions,
   useMoveTransaction,
   useToggleTransactionStatus,
 } from "../../../src/features/transactions/queries";
+import { confirmDeleteTransaction } from "../../../src/features/transactions/seriesActions";
 import type { TransactionRow } from "../../../src/features/transactions/types";
 import { useMonthSummary } from "../../../src/features/summary/queries";
 import { isValidYearMonth, shiftYearMonth, yearMonthLabel } from "../../../src/lib/dates";
@@ -33,6 +35,7 @@ export default function MonthScreen() {
   const duplicate = useDuplicateTransaction(profileId);
   const move = useMoveTransaction(profileId);
   const remove = useDeleteTransaction(profileId);
+  const removeSeries = useDeleteTransactionSeries(profileId);
 
   const categoryById = useMemo(() => {
     const map = new Map<string, { name: string; color: string }>();
@@ -71,7 +74,15 @@ export default function MonthScreen() {
         {
           label: "Excluir",
           destructive: true,
-          onPress: () => remove.mutate(menuTransaction.id),
+          onPress: () =>
+            confirmDeleteTransaction(menuTransaction, {
+              onDeleteOnly: () => remove.mutate(menuTransaction.id),
+              onDeleteSeries: () =>
+                removeSeries.mutate({
+                  recurrenceId: menuTransaction.recurrenceId!,
+                  fromDueDate: menuTransaction.dueDate,
+                }),
+            }),
         },
       ]
     : [];

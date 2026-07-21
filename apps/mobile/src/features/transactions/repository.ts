@@ -1,9 +1,10 @@
-import { and, asc, eq, isNull, like } from "drizzle-orm";
+import { and, asc, eq, gte, isNull, like, ne } from "drizzle-orm";
 
 import { db } from "../../db/client";
 import { transactions } from "../../db/schema";
 import { nowIso, shiftDateByMonths } from "../../lib/dates";
 import { newId } from "../../lib/id";
+import type { RecurrenceOccurrence } from "../../lib/recurrence";
 import type { TransactionInput, TransactionRow } from "./types";
 
 function monthPrefix(yearMonth: string): string {
@@ -118,4 +119,87 @@ export async function moveTransactionByMonths(id: string, deltaMonths: number): 
     .update(transactions)
     .set({ dueDate: shiftDateByMonths(row.dueDate, deltaMonths), updatedAt: nowIso() })
     .where(eq(transactions.id, id));
+}
+
+/**
+ * Materializes a recurring series (fixed monthly or installments, see
+ * lib/recurrence.ts) as one row per occurrence sharing a fresh recurrenceId.
+ * Only the first occurrence inherits `input.status` — future occurrences
+ * always start PENDING, since a bill due next year can't already be paid.
+ */
+export async function createRecurringSeries(
+  profileId: string,
+  input: TransactionInput,
+  occurrences: readonly RecurrenceOccurrence[],
+): Promise<string> {
+  const recurrenceId = newId();
+  await db.transaction(async (tx) => {
+    for (const [index, occurrence] of occurrences.entries()) {
+      const status = index === 0 ? input.status : "PENDING";
+      await tx.insert(transactions).values({
+        id: newId(),
+        profileId,
+        categoryId: input.categoryId,
+        name: occurrence.name,
+        type: input.type,
+        status,
+        amountCents: input.amountCents,
+        dueDate: occurrence.dueDate,
+        paidAt: status === "PAID" ? nowIso() : null,
+        recurrenceId,
+        installmentNo: occurrence.installmentNo,
+        installmentOf: occurrence.installmentOf,
+      });
+    }
+  });
+  return recurrenceId;
+}
+
+/**
+ * "Esta e futuras": propagates name/type/amount/category to every other
+ * occurrence in the series due on or after `fromDueDate`. Deliberately
+ * excludes `status`/`paidAt`/`dueDate` — a future occurrence being edited
+ * today must not be marked paid, and past occurrences are never touched
+ * because of the `gte(dueDate, fromDueDate)` filter.
+ */
+export async function updateTransactionSeriesFromDate(
+  recurrenceId: string,
+  excludeId: string,
+  fromDueDate: string,
+  input: Pick<TransactionInput, "name" | "type" | "amountCents" | "categoryId">,
+): Promise<void> {
+  await db
+    .update(transactions)
+    .set({
+      name: input.name,
+      type: input.type,
+      amountCents: input.amountCents,
+      categoryId: input.categoryId,
+      updatedAt: nowIso(),
+    })
+    .where(
+      and(
+        eq(transactions.recurrenceId, recurrenceId),
+        ne(transactions.id, excludeId),
+        gte(transactions.dueDate, fromDueDate),
+        isNull(transactions.deletedAt),
+      ),
+    );
+}
+
+/** "Esta e futuras" (excluir): soft-deletes this occurrence and every later one in the series. */
+export async function deleteTransactionSeriesFromDate(
+  recurrenceId: string,
+  fromDueDate: string,
+): Promise<void> {
+  await db
+    .update(transactions)
+    .set({ deletedAt: nowIso(), updatedAt: nowIso() })
+    .where(
+      and(
+        eq(transactions.recurrenceId, recurrenceId),
+        gte(transactions.dueDate, fromDueDate),
+        isNull(transactions.deletedAt),
+      ),
+    );
 }

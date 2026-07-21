@@ -1,14 +1,18 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
+import type { RecurrenceOccurrence } from "../../lib/recurrence";
 import {
+  createRecurringSeries,
   createTransaction,
   deleteTransaction,
+  deleteTransactionSeriesFromDate,
   duplicateTransaction,
   getTransaction,
   listTransactionsForMonth,
   moveTransactionByMonths,
   toggleTransactionStatus,
   updateTransaction,
+  updateTransactionSeriesFromDate,
 } from "./repository";
 import type { TransactionInput } from "./types";
 
@@ -96,6 +100,47 @@ export function useMoveTransaction(profileId: string | null) {
   return useMutation({
     mutationFn: ({ id, deltaMonths }: { id: string; deltaMonths: number }) =>
       moveTransactionByMonths(id, deltaMonths),
+    onSuccess: invalidate,
+  });
+}
+
+export function useCreateRecurringSeries(profileId: string | null) {
+  const invalidate = useInvalidateTransactions(profileId);
+  return useMutation({
+    mutationFn: ({
+      input,
+      occurrences,
+    }: {
+      input: TransactionInput;
+      occurrences: readonly RecurrenceOccurrence[];
+    }) => createRecurringSeries(profileId as string, input, occurrences),
+    onSuccess: invalidate,
+  });
+}
+
+export function useUpdateTransactionSeries(profileId: string | null) {
+  const invalidate = useInvalidateTransactions(profileId);
+  return useMutation({
+    mutationFn: ({
+      recurrenceId,
+      excludeId,
+      fromDueDate,
+      input,
+    }: {
+      recurrenceId: string;
+      excludeId: string;
+      fromDueDate: string;
+      input: Pick<TransactionInput, "name" | "type" | "amountCents" | "categoryId">;
+    }) => updateTransactionSeriesFromDate(recurrenceId, excludeId, fromDueDate, input),
+    onSuccess: invalidate,
+  });
+}
+
+export function useDeleteTransactionSeries(profileId: string | null) {
+  const invalidate = useInvalidateTransactions(profileId);
+  return useMutation({
+    mutationFn: ({ recurrenceId, fromDueDate }: { recurrenceId: string; fromDueDate: string }) =>
+      deleteTransactionSeriesFromDate(recurrenceId, fromDueDate),
     onSuccess: invalidate,
   });
 }

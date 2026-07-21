@@ -33,3 +33,12 @@ export interface TransactionRow {
   installmentNo: number | null;
   installmentOf: number | null;
 }
+
+/** How a new transaction from the create form should be materialized. */
+export type RecurrenceSelection =
+  | { mode: "single" }
+  | { mode: "fixed" }
+  | { mode: "installment"; installments: number };
+
+/** Scope chosen when editing/deleting an occurrence that belongs to a series. */
+export type SeriesEditScope = "only-this" | "this-and-future";
