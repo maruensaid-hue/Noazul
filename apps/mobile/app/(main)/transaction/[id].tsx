@@ -1,6 +1,8 @@
 import { router, useLocalSearchParams } from "expo-router";
-import { ActivityIndicator, Text, View } from "react-native";
 
+import { EmptyState } from "../../../src/components/ui/EmptyState";
+import { ErrorState } from "../../../src/components/ui/ErrorState";
+import { LoadingState } from "../../../src/components/ui/LoadingState";
 import { useCategories } from "../../../src/features/categories/queries";
 import {
   useDeleteTransaction,
@@ -25,21 +27,29 @@ export default function EditTransactionScreen() {
   const deleteTransaction = useDeleteTransaction(profileId);
   const deleteSeries = useDeleteTransactionSeries(profileId);
 
-  if (transactionQuery.isLoading || categoriesQuery.isLoading || !categoriesQuery.data) {
+  if (transactionQuery.isLoading || categoriesQuery.isLoading) {
+    return <LoadingState />;
+  }
+  if (categoriesQuery.isError || !categoriesQuery.data) {
     return (
-      <View className="flex-1 items-center justify-center bg-white">
-        <ActivityIndicator size="large" />
-      </View>
+      <ErrorState
+        message="Não foi possível carregar as categorias."
+        onRetry={() => categoriesQuery.refetch()}
+      />
+    );
+  }
+  if (transactionQuery.isError) {
+    return (
+      <ErrorState
+        message="Não foi possível carregar o lançamento."
+        onRetry={() => transactionQuery.refetch()}
+      />
     );
   }
 
   const transaction = transactionQuery.data;
   if (!transaction) {
-    return (
-      <View className="flex-1 items-center justify-center bg-white px-6">
-        <Text className="text-gray-500">Lançamento não encontrado.</Text>
-      </View>
-    );
+    return <EmptyState message="Lançamento não encontrado." />;
   }
 
   function saveOnlyThis(input: TransactionInput) {

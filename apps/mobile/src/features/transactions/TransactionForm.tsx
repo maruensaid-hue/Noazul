@@ -7,6 +7,7 @@ import { SegmentedControl } from "../../components/ui/SegmentedControl";
 import { dateToLocalDateString, localDateStringToDate, yearMonthLabel } from "../../lib/dates";
 import { brlToCents } from "../../lib/money";
 import { MAX_INSTALLMENTS, MIN_INSTALLMENTS, RECURRENCE_MONTHS_AHEAD } from "../../lib/recurrence";
+import { colors } from "../../lib/theme";
 import type { CategoryRow } from "../categories/repository";
 import {
   transactionInputSchema,
@@ -129,49 +130,51 @@ export function TransactionForm({
   }
 
   return (
-    <ScrollView className="flex-1 bg-white" contentContainerClassName="gap-5 px-4 py-6">
+    <ScrollView className="flex-1 bg-white dark:bg-gray-900" contentContainerClassName="gap-5 px-4 py-6">
       <View className="gap-2">
-        <Text className="text-sm font-medium text-gray-600">Nome</Text>
+        <Text className="text-sm font-medium text-gray-600 dark:text-gray-300">Nome</Text>
         <TextInput
           value={name}
           onChangeText={setName}
           placeholder="Ex: Aluguel, Salário, Mercado"
-          className="rounded-lg border border-gray-200 px-3 py-3 text-base"
+          placeholderTextColor="#9CA3AF"
+          className="rounded-lg border border-gray-200 px-3 py-3 text-base text-gray-900 dark:border-gray-700 dark:text-gray-50"
         />
       </View>
 
       <View className="gap-2">
-        <Text className="text-sm font-medium text-gray-600">Tipo</Text>
+        <Text className="text-sm font-medium text-gray-600 dark:text-gray-300">Tipo</Text>
         <SegmentedControl
           options={TYPE_OPTIONS}
           value={type}
           onChange={setType}
-          activeColor={type === "INCOME" ? "#16A34A" : "#DC2626"}
+          activeColor={type === "INCOME" ? colors.success : colors.danger}
         />
       </View>
 
       <View className="gap-2">
-        <Text className="text-sm font-medium text-gray-600">
+        <Text className="text-sm font-medium text-gray-600 dark:text-gray-300">
           {recurrenceMode === "installment" ? "Valor da parcela (R$)" : "Valor (R$)"}
         </Text>
         <TextInput
           value={amountInput}
           onChangeText={setAmountInput}
           placeholder="0,00"
+          placeholderTextColor="#9CA3AF"
           keyboardType="decimal-pad"
-          className="rounded-lg border border-gray-200 px-3 py-3 text-base"
+          className="rounded-lg border border-gray-200 px-3 py-3 text-base text-gray-900 dark:border-gray-700 dark:text-gray-50"
         />
       </View>
 
       <View className="gap-2">
-        <Text className="text-sm font-medium text-gray-600">
+        <Text className="text-sm font-medium text-gray-600 dark:text-gray-300">
           {recurrenceMode === "single" ? "Vencimento" : "Primeiro vencimento"}
         </Text>
         <Pressable
           onPress={() => setShowDatePicker(true)}
-          className="rounded-lg border border-gray-200 px-3 py-3"
+          className="rounded-lg border border-gray-200 px-3 py-3 dark:border-gray-700"
         >
-          <Text className="text-base text-gray-900">{formatDueDate(dueDate)}</Text>
+          <Text className="text-base text-gray-900 dark:text-gray-50">{formatDueDate(dueDate)}</Text>
         </Pressable>
         {showDatePicker ? (
           <DateTimePicker
@@ -185,22 +188,22 @@ export function TransactionForm({
 
       {showRecurrenceOptions ? (
         <View className="gap-2">
-          <Text className="text-sm font-medium text-gray-600">Repetição</Text>
+          <Text className="text-sm font-medium text-gray-600 dark:text-gray-300">Repetição</Text>
           <SegmentedControl options={RECURRENCE_OPTIONS} value={recurrenceMode} onChange={setRecurrenceMode} />
           {recurrenceMode === "fixed" ? (
-            <Text className="text-xs text-gray-400">
+            <Text className="text-xs text-gray-400 dark:text-gray-500">
               Cria lançamentos para os próximos {RECURRENCE_MONTHS_AHEAD} meses, na mesma data a
               cada mês.
             </Text>
           ) : null}
           {recurrenceMode === "installment" ? (
             <View className="flex-row items-center gap-3">
-              <Text className="text-sm text-gray-600">Número de parcelas</Text>
+              <Text className="text-sm text-gray-600 dark:text-gray-300">Número de parcelas</Text>
               <TextInput
                 value={installmentsInput}
                 onChangeText={setInstallmentsInput}
                 keyboardType="number-pad"
-                className="w-20 rounded-lg border border-gray-200 px-3 py-2 text-base"
+                className="w-20 rounded-lg border border-gray-200 px-3 py-2 text-base text-gray-900 dark:border-gray-700 dark:text-gray-50"
               />
             </View>
           ) : null}
@@ -208,10 +211,10 @@ export function TransactionForm({
       ) : null}
 
       <View className="gap-2">
-        <Text className="text-sm font-medium text-gray-600">Categoria</Text>
+        <Text className="text-sm font-medium text-gray-600 dark:text-gray-300">Categoria</Text>
         <Pressable
           onPress={() => setShowCategoryPicker(true)}
-          className="flex-row items-center gap-2 rounded-lg border border-gray-200 px-3 py-3"
+          className="flex-row items-center gap-2 rounded-lg border border-gray-200 px-3 py-3 dark:border-gray-700"
         >
           {selectedCategory ? (
             <View
@@ -219,21 +222,23 @@ export function TransactionForm({
               style={{ backgroundColor: selectedCategory.color }}
             />
           ) : null}
-          <Text className="text-base text-gray-900">{selectedCategory?.name ?? "Sem categoria"}</Text>
+          <Text className="text-base text-gray-900 dark:text-gray-50">
+            {selectedCategory?.name ?? "Sem categoria"}
+          </Text>
         </Pressable>
       </View>
 
       <View className="gap-2">
-        <Text className="text-sm font-medium text-gray-600">Status</Text>
+        <Text className="text-sm font-medium text-gray-600 dark:text-gray-300">Status</Text>
         <SegmentedControl options={STATUS_OPTIONS} value={status} onChange={setStatus} />
       </View>
 
-      {error ? <Text className="text-sm text-red-600">{error}</Text> : null}
+      {error ? <Text className="text-sm text-danger-600">{error}</Text> : null}
 
       <Pressable
         onPress={handleSubmit}
         disabled={isSubmitting}
-        className="items-center rounded-lg bg-blue-600 py-4"
+        className="items-center rounded-lg bg-brand-600 py-4"
         style={{ opacity: isSubmitting ? 0.6 : 1 }}
       >
         <Text className="text-base font-semibold text-white">{submitLabel}</Text>
@@ -241,7 +246,7 @@ export function TransactionForm({
 
       {onDelete ? (
         <Pressable onPress={onDelete} className="items-center py-3">
-          <Text className="text-base text-red-600">Excluir lançamento</Text>
+          <Text className="text-base text-danger-600">Excluir lançamento</Text>
         </Pressable>
       ) : null}
 

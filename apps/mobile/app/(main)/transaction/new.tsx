@@ -1,6 +1,7 @@
 import { router, useLocalSearchParams } from "expo-router";
-import { ActivityIndicator, View } from "react-native";
 
+import { ErrorState } from "../../../src/components/ui/ErrorState";
+import { LoadingState } from "../../../src/components/ui/LoadingState";
 import { useCategories } from "../../../src/features/categories/queries";
 import {
   useCreateRecurringSeries,
@@ -21,11 +22,15 @@ export default function NewTransactionScreen() {
   const yearMonth = isValidYearMonth(ym ?? "") ? (ym as string) : currentYearMonth();
   const defaultDueDate = yearMonth === currentYearMonth() ? todayDateString() : `${yearMonth}-01`;
 
-  if (categoriesQuery.isLoading || !categoriesQuery.data) {
+  if (categoriesQuery.isLoading) {
+    return <LoadingState />;
+  }
+  if (categoriesQuery.isError || !categoriesQuery.data) {
     return (
-      <View className="flex-1 items-center justify-center bg-white">
-        <ActivityIndicator size="large" />
-      </View>
+      <ErrorState
+        message="Não foi possível carregar as categorias."
+        onRetry={() => categoriesQuery.refetch()}
+      />
     );
   }
 

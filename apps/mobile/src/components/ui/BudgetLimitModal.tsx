@@ -51,18 +51,21 @@ export function BudgetLimitModal({
       onRequestClose={onClose}
     >
       <Pressable className="flex-1 justify-end bg-black/40" onPress={onClose}>
-        <Pressable className="gap-4 rounded-t-2xl bg-white px-4 pb-8 pt-5">
-          <Text className="text-base font-semibold text-gray-900">Orçamento — {categoryName}</Text>
+        <Pressable className="gap-4 rounded-t-2xl bg-white px-4 pb-8 pt-5 dark:bg-gray-800">
+          <Text className="text-base font-semibold text-gray-900 dark:text-gray-50">
+            Orçamento — {categoryName}
+          </Text>
           <TextInput
             value={amountInput}
             onChangeText={setAmountInput}
             placeholder="0,00"
+            placeholderTextColor="#9CA3AF"
             keyboardType="decimal-pad"
             autoFocus
-            className="rounded-lg border border-gray-200 px-3 py-3 text-base"
+            className="rounded-lg border border-gray-200 px-3 py-3 text-base text-gray-900 dark:border-gray-700 dark:text-gray-50"
           />
-          {error ? <Text className="text-sm text-red-600">{error}</Text> : null}
-          <Pressable onPress={handleSave} className="items-center rounded-lg bg-blue-600 py-3.5">
+          {error ? <Text className="text-sm text-danger-600">{error}</Text> : null}
+          <Pressable onPress={handleSave} className="items-center rounded-lg bg-brand-600 py-3.5">
             <Text className="text-base font-semibold text-white">Salvar</Text>
           </Pressable>
           {onRemove ? (
@@ -73,7 +76,7 @@ export function BudgetLimitModal({
               }}
               className="items-center py-2"
             >
-              <Text className="text-base text-red-600">Remover orçamento</Text>
+              <Text className="text-base text-danger-600">Remover orçamento</Text>
             </Pressable>
           ) : null}
         </Pressable>
