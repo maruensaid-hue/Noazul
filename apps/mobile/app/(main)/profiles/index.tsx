@@ -7,6 +7,7 @@ import { EmptyState } from "../../../src/components/ui/EmptyState";
 import { ErrorState } from "../../../src/components/ui/ErrorState";
 import { LoadingState } from "../../../src/components/ui/LoadingState";
 import { TextPromptModal } from "../../../src/components/ui/TextPromptModal";
+import { canCreateProfile } from "../../../src/features/profiles/gate";
 import {
   useCreateAndActivateProfile,
   useDeleteProfile,
@@ -15,8 +16,10 @@ import {
   useSwitchActiveProfile,
 } from "../../../src/features/profiles/queries";
 import type { ProfileRow } from "../../../src/features/profiles/repository";
+import { useBillingStore } from "../../../src/stores/billingStore";
 
 export default function ProfilesScreen() {
+  const isPremium = useBillingStore((state) => state.isPremium);
   const profilesQuery = useProfiles();
   const switchProfile = useSwitchActiveProfile();
   const renameProfile = useRenameProfile();
@@ -102,7 +105,13 @@ export default function ProfilesScreen() {
       />
 
       <Pressable
-        onPress={() => setCreating(true)}
+        onPress={() => {
+          if (canCreateProfile(isPremium, profiles.length)) {
+            setCreating(true);
+          } else {
+            router.push("/paywall");
+          }
+        }}
         className="mx-4 my-4 items-center rounded-lg border border-brand-200 bg-brand-50 py-3 dark:border-brand-800 dark:bg-brand-900/30"
       >
         <Text className="text-sm font-medium text-brand-700 dark:text-brand-300">

@@ -1,5 +1,11 @@
 import type { ExpoConfig } from "expo/config";
 
+// Google's public sample AdMob App IDs — safe to ship as a fallback while
+// EXPO_PUBLIC_ADMOB_APP_ID_* isn't set (see .env.example). Real IDs come
+// from the AdMob console once the app is registered there.
+const TEST_ADMOB_APP_ID_ANDROID = "ca-app-pub-3940256099942544~3347511713";
+const TEST_ADMOB_APP_ID_IOS = "ca-app-pub-3940256099942544~1458002511";
+
 const config: ExpoConfig = {
   name: "NoAzul",
   slug: "noazul",
@@ -35,6 +41,13 @@ const config: ExpoConfig = {
         image: "./assets/splash-icon.png",
         resizeMode: "contain",
         backgroundColor: "#0B1220",
+      },
+    ],
+    [
+      "react-native-google-mobile-ads",
+      {
+        androidAppId: process.env.EXPO_PUBLIC_ADMOB_APP_ID_ANDROID || TEST_ADMOB_APP_ID_ANDROID,
+        iosAppId: process.env.EXPO_PUBLIC_ADMOB_APP_ID_IOS || TEST_ADMOB_APP_ID_IOS,
       },
     ],
   ],

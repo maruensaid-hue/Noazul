@@ -3,6 +3,7 @@ import { useMemo, useState } from "react";
 import { FlatList, Pressable, Text, View } from "react-native";
 
 import { ActionSheetModal } from "../../../src/components/ui/ActionSheetModal";
+import { AdBanner } from "../../../src/components/ui/AdBanner";
 import { EmptyState } from "../../../src/components/ui/EmptyState";
 import { ErrorState } from "../../../src/components/ui/ErrorState";
 import { LoadingState } from "../../../src/components/ui/LoadingState";
@@ -23,12 +24,14 @@ import {
 import { confirmDeleteTransaction } from "../../../src/features/transactions/seriesActions";
 import type { TransactionRow } from "../../../src/features/transactions/types";
 import { isValidYearMonth, shiftYearMonth, yearMonthLabel } from "../../../src/lib/dates";
+import { useBillingStore } from "../../../src/stores/billingStore";
 import { useProfileStore } from "../../../src/stores/profileStore";
 
 export default function MonthScreen() {
   const { ym } = useLocalSearchParams<{ ym: string }>();
   const yearMonth = isValidYearMonth(ym ?? "") ? (ym as string) : undefined;
   const profileId = useProfileStore((state) => state.activeProfileId);
+  const isPremium = useBillingStore((state) => state.isPremium);
 
   const [menuTransaction, setMenuTransaction] = useState<TransactionRow | null>(null);
 
@@ -155,6 +158,7 @@ export default function MonthScreen() {
               message={`Nenhum lançamento em ${yearMonthLabel(yearMonth)}. Toque em + para adicionar o primeiro.`}
             />
           }
+          ListFooterComponent={!isPremium ? <AdBanner /> : null}
         />
       )}
 
