@@ -2,9 +2,13 @@ import { describe, expect, it } from "vitest";
 
 import {
   currentYearMonth,
+  dateToLocalDateString,
   daysInMonth,
+  isValidDateString,
   isValidYearMonth,
+  localDateStringToDate,
   parseYearMonth,
+  shiftDateByMonths,
   shiftYearMonth,
   yearMonthLabel,
   yearMonthOf,
@@ -101,5 +105,65 @@ describe("yearMonthOf", () => {
 
   it("throws on an invalid date string", () => {
     expect(() => yearMonthOf("not-a-date")).toThrow(TypeError);
+  });
+});
+
+describe("isValidDateString", () => {
+  it("accepts well-formed dates", () => {
+    expect(isValidDateString("2026-07-21")).toBe(true);
+    expect(isValidDateString("2026-02-29")).toBe(true);
+  });
+
+  it("rejects malformed dates", () => {
+    expect(isValidDateString("2026-07-32")).toBe(false);
+    expect(isValidDateString("2026-13-01")).toBe(false);
+    expect(isValidDateString("2026/07/21")).toBe(false);
+    expect(isValidDateString("")).toBe(false);
+  });
+});
+
+describe("shiftDateByMonths", () => {
+  it("shifts within the same month length", () => {
+    expect(shiftDateByMonths("2026-07-10", 1)).toBe("2026-08-10");
+    expect(shiftDateByMonths("2026-07-10", -1)).toBe("2026-06-10");
+  });
+
+  it("clamps day 31 into a shorter month", () => {
+    expect(shiftDateByMonths("2026-01-31", 1)).toBe("2026-02-28");
+  });
+
+  it("clamps into a leap February", () => {
+    expect(shiftDateByMonths("2028-01-31", 1)).toBe("2028-02-29");
+  });
+
+  it("rolls over year boundaries", () => {
+    expect(shiftDateByMonths("2026-12-15", 1)).toBe("2027-01-15");
+    expect(shiftDateByMonths("2026-01-15", -1)).toBe("2025-12-15");
+  });
+
+  it("is a no-op with delta 0", () => {
+    expect(shiftDateByMonths("2026-07-21", 0)).toBe("2026-07-21");
+  });
+
+  it("throws on an invalid date string", () => {
+    expect(() => shiftDateByMonths("not-a-date", 1)).toThrow(TypeError);
+  });
+});
+
+describe("localDateStringToDate / dateToLocalDateString", () => {
+  it("round-trips using local calendar components", () => {
+    const date = localDateStringToDate("2026-07-21");
+    expect(date.getFullYear()).toBe(2026);
+    expect(date.getMonth()).toBe(6);
+    expect(date.getDate()).toBe(21);
+    expect(dateToLocalDateString(date)).toBe("2026-07-21");
+  });
+
+  it("throws on an invalid date string", () => {
+    expect(() => localDateStringToDate("not-a-date")).toThrow(TypeError);
+  });
+
+  it("pads single-digit month and day", () => {
+    expect(dateToLocalDateString(new Date(2026, 0, 5))).toBe("2026-01-05");
   });
 });

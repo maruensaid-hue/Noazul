@@ -66,3 +66,60 @@ export function yearMonthOf(isoDate: string): string {
   }
   return currentYearMonth(date);
 }
+
+const DATE_RE = /^(\d{4})-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/;
+
+export function isValidDateString(value: string): boolean {
+  return DATE_RE.test(value);
+}
+
+/** Today as a "YYYY-MM-DD" string, in UTC. */
+export function todayDateString(now: Date = new Date()): string {
+  return now.toISOString().slice(0, 10);
+}
+
+/** Current instant as an ISO-8601 datetime string (always UTC). */
+export function nowIso(): string {
+  return new Date().toISOString();
+}
+
+/**
+ * Shifts a "YYYY-MM-DD" date by `deltaMonths` months, clamping the day to the
+ * target month's last day (e.g. "2026-01-31" + 1 month -> "2026-02-28").
+ * Used both for moving a single transaction and, later, recurrence materialization.
+ */
+export function shiftDateByMonths(dateStr: string, deltaMonths: number): string {
+  const match = DATE_RE.exec(dateStr);
+  if (!match) {
+    throw new TypeError(`Invalid date "${dateStr}", expected "YYYY-MM-DD"`);
+  }
+  const [, yearStr, monthStr, dayStr] = match;
+  const sourceYearMonth = formatYearMonth({ year: Number(yearStr), month: Number(monthStr) });
+  const targetYearMonth = shiftYearMonth(sourceYearMonth, deltaMonths);
+  const targetParts = parseYearMonth(targetYearMonth);
+  const clampedDay = Math.min(Number(dayStr), daysInMonth(targetParts));
+  return `${targetYearMonth}-${String(clampedDay).padStart(2, "0")}`;
+}
+
+/**
+ * Converts a "YYYY-MM-DD" string to a Date using LOCAL calendar components
+ * (not UTC). Use this to feed native date pickers: parsing the string as UTC
+ * and letting the picker render it in local time would shift the displayed
+ * day by one in negative UTC offsets (e.g. Brazil).
+ */
+export function localDateStringToDate(dateStr: string): Date {
+  const match = DATE_RE.exec(dateStr);
+  if (!match) {
+    throw new TypeError(`Invalid date "${dateStr}", expected "YYYY-MM-DD"`);
+  }
+  const [, year, month, day] = match;
+  return new Date(Number(year), Number(month) - 1, Number(day));
+}
+
+/** Inverse of `localDateStringToDate`: reads a Date's LOCAL calendar day as "YYYY-MM-DD". */
+export function dateToLocalDateString(date: Date): string {
+  const year = date.getFullYear();
+  const month = date.getMonth() + 1;
+  const day = date.getDate();
+  return `${String(year).padStart(4, "0")}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+}

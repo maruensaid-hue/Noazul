@@ -1,10 +1,47 @@
-import { Text, View } from "react-native";
+import { router, useLocalSearchParams } from "expo-router";
+import { ActivityIndicator, View } from "react-native";
+
+import { useCategories } from "../../../src/features/categories/queries";
+import { useCreateTransaction } from "../../../src/features/transactions/queries";
+import { TransactionForm } from "../../../src/features/transactions/TransactionForm";
+import { currentYearMonth, isValidYearMonth, todayDateString } from "../../../src/lib/dates";
+import { useProfileStore } from "../../../src/stores/profileStore";
 
 export default function NewTransactionScreen() {
+  const { ym } = useLocalSearchParams<{ ym?: string }>();
+  const profileId = useProfileStore((state) => state.activeProfileId);
+  const categoriesQuery = useCategories(profileId);
+  const createTransaction = useCreateTransaction(profileId);
+
+  const yearMonth = isValidYearMonth(ym ?? "") ? (ym as string) : currentYearMonth();
+  const defaultDueDate = yearMonth === currentYearMonth() ? todayDateString() : `${yearMonth}-01`;
+
+  if (categoriesQuery.isLoading || !categoriesQuery.data) {
+    return (
+      <View className="flex-1 items-center justify-center bg-white">
+        <ActivityIndicator size="large" />
+      </View>
+    );
+  }
+
   return (
-    <View className="flex-1 items-center justify-center bg-white px-6">
-      <Text className="text-lg font-semibold">Novo lançamento</Text>
-      <Text className="mt-2 text-gray-500">Implementado na Fase 1 do roadmap.</Text>
-    </View>
+    <TransactionForm
+      initialValues={{
+        name: "",
+        type: "EXPENSE",
+        status: "PENDING",
+        amountInput: "",
+        dueDate: defaultDueDate,
+        categoryId: null,
+      }}
+      categories={categoriesQuery.data}
+      submitLabel="Adicionar lançamento"
+      isSubmitting={createTransaction.isPending}
+      onSubmit={(input) => {
+        createTransaction.mutate(input, {
+          onSuccess: () => router.back(),
+        });
+      }}
+    />
   );
 }

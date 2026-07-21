@@ -1,0 +1,16 @@
+import { useQuery } from "@tanstack/react-query";
+
+import { getMonthSummary } from "./repository";
+
+export const summaryKeys = {
+  month: (profileId: string, yearMonth: string) =>
+    ["transactions-summary", profileId, yearMonth] as const,
+};
+
+export function useMonthSummary(profileId: string | null, yearMonth: string) {
+  return useQuery({
+    queryKey: summaryKeys.month(profileId ?? "", yearMonth),
+    queryFn: () => getMonthSummary(profileId as string, yearMonth),
+    enabled: profileId !== null,
+  });
+}

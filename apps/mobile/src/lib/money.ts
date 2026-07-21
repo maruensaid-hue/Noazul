@@ -60,3 +60,18 @@ export function brlToCents(input: string): number {
 export function sumCents(amounts: readonly number[]): number {
   return amounts.reduce((total, amount) => total + Math.trunc(amount), 0);
 }
+
+/**
+ * Converts cents to a plain "1234,56" string (no currency symbol) suitable for
+ * prefilling an editable amount TextInput. Use `brlToCents` to parse it back.
+ */
+export function centsToInputString(cents: number): string {
+  if (!Number.isInteger(cents)) {
+    throw new TypeError(`centsToInputString expects an integer number of cents, got ${cents}`);
+  }
+  const sign = cents < 0 ? "-" : "";
+  const absCents = Math.abs(cents);
+  const integerPart = Math.trunc(absCents / 100);
+  const fractionalPart = String(absCents % 100).padStart(2, "0");
+  return `${sign}${integerPart},${fractionalPart}`;
+}

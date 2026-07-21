@@ -1,42 +1,46 @@
-import { eq } from "drizzle-orm";
 import { Link, router, useLocalSearchParams } from "expo-router";
-import { useEffect, useState } from "react";
-import { Pressable, Text, View } from "react-native";
+import { useMemo, useState } from "react";
+import { FlatList, Pressable, Text, View } from "react-native";
 
-import { db } from "../../../src/db/client";
-import { categories, profiles } from "../../../src/db/schema";
+import { ActionSheetModal } from "../../../src/components/ui/ActionSheetModal";
+import { MonthSummaryBar } from "../../../src/components/ui/MonthSummaryBar";
+import { TransactionCard } from "../../../src/components/ui/TransactionCard";
+import { useCategories } from "../../../src/features/categories/queries";
+import {
+  useDeleteTransaction,
+  useDuplicateTransaction,
+  useMonthTransactions,
+  useMoveTransaction,
+  useToggleTransactionStatus,
+} from "../../../src/features/transactions/queries";
+import type { TransactionRow } from "../../../src/features/transactions/types";
+import { useMonthSummary } from "../../../src/features/summary/queries";
 import { isValidYearMonth, shiftYearMonth, yearMonthLabel } from "../../../src/lib/dates";
+import { useProfileStore } from "../../../src/stores/profileStore";
 
 export default function MonthScreen() {
   const { ym } = useLocalSearchParams<{ ym: string }>();
-  const yearMonth = isValidYearMonth(ym ?? "") ? ym! : undefined;
+  const yearMonth = isValidYearMonth(ym ?? "") ? (ym as string) : undefined;
+  const profileId = useProfileStore((state) => state.activeProfileId);
 
-  const [profileName, setProfileName] = useState<string | null>(null);
-  const [categoryCount, setCategoryCount] = useState<number | null>(null);
+  const [menuTransaction, setMenuTransaction] = useState<TransactionRow | null>(null);
 
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      const [profile] = await db
-        .select({ id: profiles.id, name: profiles.name })
-        .from(profiles)
-        .where(eq(profiles.isDefault, true))
-        .limit(1);
-      if (!profile || cancelled) return;
+  const transactionsQuery = useMonthTransactions(profileId, yearMonth ?? "");
+  const summaryQuery = useMonthSummary(profileId, yearMonth ?? "");
+  const categoriesQuery = useCategories(profileId);
 
-      const profileCategories = await db
-        .select({ id: categories.id })
-        .from(categories)
-        .where(eq(categories.profileId, profile.id));
+  const toggleStatus = useToggleTransactionStatus(profileId);
+  const duplicate = useDuplicateTransaction(profileId);
+  const move = useMoveTransaction(profileId);
+  const remove = useDeleteTransaction(profileId);
 
-      if (cancelled) return;
-      setProfileName(profile.name);
-      setCategoryCount(profileCategories.length);
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+  const categoryById = useMemo(() => {
+    const map = new Map<string, { name: string; color: string }>();
+    for (const category of categoriesQuery.data ?? []) {
+      map.set(category.id, { name: category.name, color: category.color });
+    }
+    return map;
+  }, [categoriesQuery.data]);
 
   if (!yearMonth) {
     return (
@@ -46,16 +50,42 @@ export default function MonthScreen() {
     );
   }
 
+  const menuOptions = menuTransaction
+    ? [
+        {
+          label: menuTransaction.status === "PAID" ? "Marcar como pendente" : "Marcar como pago",
+          onPress: () => toggleStatus.mutate(menuTransaction.id),
+        },
+        {
+          label: "Duplicar lançamento",
+          onPress: () => duplicate.mutate(menuTransaction.id),
+        },
+        {
+          label: "Mover para o mês anterior",
+          onPress: () => move.mutate({ id: menuTransaction.id, deltaMonths: -1 }),
+        },
+        {
+          label: "Mover para o próximo mês",
+          onPress: () => move.mutate({ id: menuTransaction.id, deltaMonths: 1 }),
+        },
+        {
+          label: "Excluir",
+          destructive: true,
+          onPress: () => remove.mutate(menuTransaction.id),
+        },
+      ]
+    : [];
+
   return (
-    <View className="flex-1 items-center justify-center gap-4 bg-white px-6">
-      <View className="flex-row items-center gap-6">
+    <View className="flex-1 bg-white">
+      <View className="flex-row items-center justify-between border-b border-gray-100 px-4 pb-3 pt-14">
         <Pressable
           onPress={() => router.setParams({ ym: shiftYearMonth(yearMonth, -1) })}
           hitSlop={12}
         >
           <Text className="text-2xl">←</Text>
         </Pressable>
-        <Text className="text-xl font-semibold capitalize">{yearMonthLabel(yearMonth)}</Text>
+        <Text className="text-lg font-semibold capitalize">{yearMonthLabel(yearMonth)}</Text>
         <Pressable
           onPress={() => router.setParams({ ym: shiftYearMonth(yearMonth, 1) })}
           hitSlop={12}
@@ -64,19 +94,49 @@ export default function MonthScreen() {
         </Pressable>
       </View>
 
-      <Text className="text-gray-500">
-        Perfil: {profileName ?? "carregando…"} · {categoryCount ?? "…"} categorias
-      </Text>
+      {summaryQuery.data ? <MonthSummaryBar summary={summaryQuery.data} /> : null}
 
-      <Link href="/(main)/budget" className="mt-4 text-blue-600">
-        Orçamentos
+      <FlatList
+        data={transactionsQuery.data ?? []}
+        keyExtractor={(item) => item.id}
+        renderItem={({ item }) => {
+          const category = item.categoryId ? categoryById.get(item.categoryId) : undefined;
+          return (
+            <TransactionCard
+              transaction={item}
+              categoryName={category?.name}
+              categoryColor={category?.color}
+              onToggleStatus={(id) => toggleStatus.mutate(id)}
+              onPress={(id) => router.push(`/transaction/${id}`)}
+              onLongPress={() => setMenuTransaction(item)}
+            />
+          );
+        }}
+        ListEmptyComponent={
+          transactionsQuery.isLoading ? null : (
+            <View className="items-center px-6 py-16">
+              <Text className="text-center text-gray-400">
+                Nenhum lançamento em {yearMonthLabel(yearMonth)}. Toque em + para adicionar o
+                primeiro.
+              </Text>
+            </View>
+          )
+        }
+      />
+
+      <Link
+        href={`/transaction/new?ym=${yearMonth}`}
+        className="absolute bottom-8 right-6 h-14 w-14 items-center justify-center rounded-full bg-blue-600 text-center text-2xl leading-[56px] text-white shadow-lg"
+      >
+        +
       </Link>
-      <Link href="/(main)/profiles" className="text-blue-600">
-        Perfis
-      </Link>
-      <Link href="/(main)/settings" className="text-blue-600">
-        Ajustes
-      </Link>
+
+      <ActionSheetModal
+        visible={menuTransaction !== null}
+        title={menuTransaction?.name}
+        options={menuOptions}
+        onClose={() => setMenuTransaction(null)}
+      />
     </View>
   );
 }
