@@ -3,9 +3,11 @@ import { useMemo, useState } from "react";
 import { FlatList, Pressable, Text, View } from "react-native";
 
 import { ActionSheetModal } from "../../../src/components/ui/ActionSheetModal";
-import { MonthSummaryBar } from "../../../src/components/ui/MonthSummaryBar";
 import { TransactionCard } from "../../../src/components/ui/TransactionCard";
 import { useCategories } from "../../../src/features/categories/queries";
+import { computeCategorySlices } from "../../../src/features/summary/derived";
+import { MonthSummarySheet, SHEET_COLLAPSED_HEIGHT } from "../../../src/features/summary/MonthSummarySheet";
+import { useMonthCategoryBreakdown, useMonthSummary } from "../../../src/features/summary/queries";
 import {
   useDeleteTransaction,
   useDeleteTransactionSeries,
@@ -16,7 +18,6 @@ import {
 } from "../../../src/features/transactions/queries";
 import { confirmDeleteTransaction } from "../../../src/features/transactions/seriesActions";
 import type { TransactionRow } from "../../../src/features/transactions/types";
-import { useMonthSummary } from "../../../src/features/summary/queries";
 import { isValidYearMonth, shiftYearMonth, yearMonthLabel } from "../../../src/lib/dates";
 import { useProfileStore } from "../../../src/stores/profileStore";
 
@@ -29,7 +30,13 @@ export default function MonthScreen() {
 
   const transactionsQuery = useMonthTransactions(profileId, yearMonth ?? "");
   const summaryQuery = useMonthSummary(profileId, yearMonth ?? "");
+  const categoryBreakdownQuery = useMonthCategoryBreakdown(profileId, yearMonth ?? "");
   const categoriesQuery = useCategories(profileId);
+
+  const categorySlices = useMemo(
+    () => computeCategorySlices(categoryBreakdownQuery.data ?? []),
+    [categoryBreakdownQuery.data],
+  );
 
   const toggleStatus = useToggleTransactionStatus(profileId);
   const duplicate = useDuplicateTransaction(profileId);
@@ -105,11 +112,14 @@ export default function MonthScreen() {
         </Pressable>
       </View>
 
-      {summaryQuery.data ? <MonthSummaryBar summary={summaryQuery.data} /> : null}
+      <Link href={`/(main)/budget?ym=${yearMonth}`} className="px-4 py-2 text-sm text-blue-600">
+        Ver orçamentos do mês →
+      </Link>
 
       <FlatList
         data={transactionsQuery.data ?? []}
         keyExtractor={(item) => item.id}
+        contentContainerStyle={{ paddingBottom: SHEET_COLLAPSED_HEIGHT + 16 }}
         renderItem={({ item }) => {
           const category = item.categoryId ? categoryById.get(item.categoryId) : undefined;
           return (
@@ -137,10 +147,15 @@ export default function MonthScreen() {
 
       <Link
         href={`/transaction/new?ym=${yearMonth}`}
-        className="absolute bottom-8 right-6 h-14 w-14 items-center justify-center rounded-full bg-blue-600 text-center text-2xl leading-[56px] text-white shadow-lg"
+        className="absolute right-6 h-14 w-14 items-center justify-center rounded-full bg-blue-600 text-center text-2xl leading-[56px] text-white shadow-lg"
+        style={{ bottom: SHEET_COLLAPSED_HEIGHT + 16 }}
       >
         +
       </Link>
+
+      {summaryQuery.data ? (
+        <MonthSummarySheet summary={summaryQuery.data} categorySlices={categorySlices} />
+      ) : null}
 
       <ActionSheetModal
         visible={menuTransaction !== null}

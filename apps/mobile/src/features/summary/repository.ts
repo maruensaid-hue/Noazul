@@ -1,8 +1,9 @@
-import { and, eq, isNull, like, sql } from "drizzle-orm";
+import { and, desc, eq, isNull, like, sql } from "drizzle-orm";
 
 import { db } from "../../db/client";
-import { transactions } from "../../db/schema";
+import { categories, transactions } from "../../db/schema";
 import { sumCents } from "../../lib/money";
+import { computeAverageDailyExpenseCents, type CategoryAmount } from "./derived";
 
 export interface MonthSummary {
   /** Sum of all INCOME transactions this month. */
@@ -15,6 +16,8 @@ export interface MonthSummary {
   expensePendingCents: number;
   /** Income minus every committed expense (paid + pending) — "saldo seguro". */
   safeBalanceCents: number;
+  /** expenseTotalCents spread evenly across the month's days. */
+  averageDailyExpenseCents: number;
 }
 
 export async function getMonthSummary(
@@ -48,5 +51,39 @@ export async function getMonthSummary(
     expensePaidCents,
     expensePendingCents,
     safeBalanceCents: sumCents([incomeCents, -expenseTotalCents]),
+    averageDailyExpenseCents: computeAverageDailyExpenseCents(expenseTotalCents, yearMonth),
   };
+}
+
+/** EXPENSE totals (paid + pending) grouped by category, for the donut chart. */
+export async function getMonthCategoryBreakdown(
+  profileId: string,
+  yearMonth: string,
+): Promise<CategoryAmount[]> {
+  const rows = await db
+    .select({
+      categoryId: transactions.categoryId,
+      name: categories.name,
+      color: categories.color,
+      amountCents: sql<number>`sum(${transactions.amountCents})`,
+    })
+    .from(transactions)
+    .leftJoin(categories, eq(transactions.categoryId, categories.id))
+    .where(
+      and(
+        eq(transactions.profileId, profileId),
+        eq(transactions.type, "EXPENSE"),
+        isNull(transactions.deletedAt),
+        like(transactions.dueDate, `${yearMonth}-%`),
+      ),
+    )
+    .groupBy(transactions.categoryId, categories.name, categories.color)
+    .orderBy(desc(sql`sum(${transactions.amountCents})`));
+
+  return rows.map((row) => ({
+    categoryId: row.categoryId,
+    name: row.name ?? "Sem categoria",
+    color: row.color ?? "#9CA3AF",
+    amountCents: row.amountCents,
+  }));
 }
