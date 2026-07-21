@@ -7,18 +7,24 @@
     "development": {
       "developmentClient": true,
       "distribution": "internal",
+      "node": "20.18.0",
+      "pnpm": "10.33.0",
       "android": {
         "buildType": "apk"
       }
     },
     "preview": {
       "distribution": "internal",
+      "node": "20.18.0",
+      "pnpm": "10.33.0",
       "android": {
         "buildType": "apk"
       }
     },
     "production": {
-      "autoIncrement": true
+      "autoIncrement": true,
+      "node": "20.18.0",
+      "pnpm": "10.33.0"
     }
   },
   "submit": {
