@@ -9,6 +9,7 @@ const TEST_ADMOB_APP_ID_IOS = "ca-app-pub-3940256099942544~1458002511";
 const config: ExpoConfig = {
   name: "NoAzul",
   slug: "noazul",
+  owner: "maruensaid-hue",
   scheme: "noazul",
   version: "0.1.0",
   orientation: "portrait",
@@ -56,8 +57,8 @@ const config: ExpoConfig = {
   },
   extra: {
     eas: {
-      // Filled in by `eas init` once the project is registered at expo.dev.
-      projectId: process.env.EAS_PROJECT_ID ?? "",
+      // Registered via `eas init` at expo.dev/accounts/maruensaid-hue/projects/noazul.
+      projectId: process.env.EAS_PROJECT_ID ?? "f4a6e092-a518-42be-9057-ba97484c6291",
     },
   },
 };
