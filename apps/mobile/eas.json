@@ -9,7 +9,6 @@
       "distribution": "internal",
       "node": "20.18.0",
       "pnpm": "10.33.0",
-      "corepack": true,
       "android": {
         "image": "latest",
         "buildType": "apk"
@@ -19,7 +18,6 @@
       "distribution": "internal",
       "node": "20.18.0",
       "pnpm": "10.33.0",
-      "corepack": true,
       "android": {
         "image": "latest",
         "buildType": "apk"
@@ -29,7 +27,6 @@
       "autoIncrement": true,
       "node": "20.18.0",
       "pnpm": "10.33.0",
-      "corepack": true,
       "android": {
         "image": "latest"
       }
