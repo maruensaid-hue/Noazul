@@ -7,6 +7,7 @@ import { AdBanner } from "../../../src/components/ui/AdBanner";
 import { EmptyState } from "../../../src/components/ui/EmptyState";
 import { ErrorState } from "../../../src/components/ui/ErrorState";
 import { LoadingState } from "../../../src/components/ui/LoadingState";
+import { MotivationalBanner } from "../../../src/components/ui/MotivationalBanner";
 import { TransactionCard } from "../../../src/components/ui/TransactionCard";
 import { useCategories } from "../../../src/features/categories/queries";
 import { ProfileSwitcher } from "../../../src/features/profiles/ProfileSwitcher";
@@ -124,9 +125,18 @@ export default function MonthScreen() {
         </Pressable>
       </View>
 
-      <Link href={`/(main)/budget?ym=${yearMonth}`} className="px-4 py-2 text-sm text-brand-600">
-        Ver orçamentos do mês →
-      </Link>
+      {summaryQuery.data ? (
+        <MotivationalBanner safeBalanceCents={summaryQuery.data.safeBalanceCents} />
+      ) : null}
+
+      <View className="flex-row items-center justify-between px-4 py-2">
+        <Link href={`/(main)/budget?ym=${yearMonth}`} className="text-sm text-brand-600">
+          Ver orçamentos do mês →
+        </Link>
+        <Link href={`/(main)/year/${yearMonth.slice(0, 4)}`} className="text-sm text-brand-600">
+          Ver resumo anual →
+        </Link>
+      </View>
 
       {transactionsQuery.isLoading ? (
         <LoadingState />

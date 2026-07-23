@@ -15,6 +15,13 @@ export function isValidYearMonth(value: string): boolean {
   return YEAR_MONTH_RE.test(value);
 }
 
+const YEAR_RE = /^\d{4}$/;
+
+/** Validates a "YYYY" route param, e.g. for the annual dashboard. */
+export function isValidYear(value: string): boolean {
+  return YEAR_RE.test(value);
+}
+
 export function parseYearMonth(value: string): YearMonthParts {
   const match = YEAR_MONTH_RE.exec(value);
   if (!match) {
@@ -56,6 +63,17 @@ const MONTH_LABEL_FORMATTER = new Intl.DateTimeFormat("pt-BR", {
 export function yearMonthLabel(value: string): string {
   const { year, month } = parseYearMonth(value);
   return MONTH_LABEL_FORMATTER.format(new Date(Date.UTC(year, month - 1, 1)));
+}
+
+const MONTH_SHORT_LABEL_FORMATTER = new Intl.DateTimeFormat("pt-BR", {
+  month: "short",
+  timeZone: "UTC",
+});
+
+/** Short month label for a "YYYY-MM" string, e.g. "2026-07" -> "jul.", for chart axes. */
+export function monthShortLabel(value: string): string {
+  const { year, month } = parseYearMonth(value);
+  return MONTH_SHORT_LABEL_FORMATTER.format(new Date(Date.UTC(year, month - 1, 1)));
 }
 
 /** Extracts the "YYYY-MM" bucket a given ISO date/datetime string belongs to. */

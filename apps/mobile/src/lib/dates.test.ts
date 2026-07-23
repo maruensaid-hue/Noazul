@@ -5,8 +5,10 @@ import {
   dateToLocalDateString,
   daysInMonth,
   isValidDateString,
+  isValidYear,
   isValidYearMonth,
   localDateStringToDate,
+  monthShortLabel,
   parseYearMonth,
   shiftDateByMonths,
   shiftYearMonth,
@@ -27,6 +29,18 @@ describe("isValidYearMonth", () => {
     expect(isValidYearMonth("26-07")).toBe(false);
     expect(isValidYearMonth("2026/07")).toBe(false);
     expect(isValidYearMonth("")).toBe(false);
+  });
+});
+
+describe("isValidYear", () => {
+  it("accepts a 4-digit year", () => {
+    expect(isValidYear("2026")).toBe(true);
+  });
+
+  it("rejects malformed values", () => {
+    expect(isValidYear("26")).toBe(false);
+    expect(isValidYear("2026-07")).toBe(false);
+    expect(isValidYear("")).toBe(false);
   });
 });
 
@@ -95,6 +109,13 @@ describe("yearMonthLabel", () => {
   it("formats a pt-BR month/year label", () => {
     expect(yearMonthLabel("2026-07")).toContain("2026");
     expect(yearMonthLabel("2026-07").toLowerCase()).toContain("julho");
+  });
+});
+
+describe("monthShortLabel", () => {
+  it("formats a short pt-BR month abbreviation", () => {
+    expect(monthShortLabel("2026-07").toLowerCase()).toContain("jul");
+    expect(monthShortLabel("2026-01").toLowerCase()).toContain("jan");
   });
 });
 

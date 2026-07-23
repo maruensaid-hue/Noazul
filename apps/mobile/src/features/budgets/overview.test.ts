@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   budgetProgressFraction,
-  isBudgetOverspent,
+  budgetStatus,
   mergeBudgetOverview,
   remainingBudgetCents,
 } from "./overview";
@@ -89,10 +89,10 @@ describe("remainingBudgetCents", () => {
   });
 });
 
-describe("isBudgetOverspent", () => {
-  it("is false without a budget", () => {
+describe("budgetStatus", () => {
+  it("is 'no-goal' without a budget", () => {
     expect(
-      isBudgetOverspent({
+      budgetStatus({
         categoryId: "a",
         categoryName: "A",
         categoryColor: "#000",
@@ -100,12 +100,51 @@ describe("isBudgetOverspent", () => {
         limitCents: null,
         spentCents: 999999,
       }),
-    ).toBe(false);
+    ).toBe("no-goal");
   });
 
-  it("is false exactly at the limit", () => {
+  it("is 'ok' well under the limit", () => {
     expect(
-      isBudgetOverspent({
+      budgetStatus({
+        categoryId: "a",
+        categoryName: "A",
+        categoryColor: "#000",
+        budgetId: "b",
+        limitCents: 10000,
+        spentCents: 5000,
+      }),
+    ).toBe("ok");
+  });
+
+  it("is 'attention' at exactly 80% of the limit", () => {
+    expect(
+      budgetStatus({
+        categoryId: "a",
+        categoryName: "A",
+        categoryColor: "#000",
+        budgetId: "b",
+        limitCents: 10000,
+        spentCents: 8000,
+      }),
+    ).toBe("attention");
+  });
+
+  it("is 'attention' between 80% and the limit", () => {
+    expect(
+      budgetStatus({
+        categoryId: "a",
+        categoryName: "A",
+        categoryColor: "#000",
+        budgetId: "b",
+        limitCents: 10000,
+        spentCents: 9500,
+      }),
+    ).toBe("attention");
+  });
+
+  it("is 'attention' exactly at the limit (100% >= 80% threshold, not yet over)", () => {
+    expect(
+      budgetStatus({
         categoryId: "a",
         categoryName: "A",
         categoryColor: "#000",
@@ -113,12 +152,12 @@ describe("isBudgetOverspent", () => {
         limitCents: 10000,
         spentCents: 10000,
       }),
-    ).toBe(false);
+    ).toBe("attention");
   });
 
-  it("is true one cent over the limit", () => {
+  it("is 'overspent' one cent over the limit", () => {
     expect(
-      isBudgetOverspent({
+      budgetStatus({
         categoryId: "a",
         categoryName: "A",
         categoryColor: "#000",
@@ -126,7 +165,7 @@ describe("isBudgetOverspent", () => {
         limitCents: 10000,
         spentCents: 10001,
       }),
-    ).toBe(true);
+    ).toBe("overspent");
   });
 });
 

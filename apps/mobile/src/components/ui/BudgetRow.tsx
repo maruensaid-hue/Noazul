@@ -2,7 +2,7 @@ import { Pressable, Text, View } from "react-native";
 
 import {
   budgetProgressFraction,
-  isBudgetOverspent,
+  budgetStatus,
   remainingBudgetCents,
   type BudgetOverviewEntry,
 } from "../../features/budgets/overview";
@@ -12,8 +12,10 @@ import { BudgetProgressBar } from "./BudgetProgressBar";
 
 export function BudgetRow({ entry, onPress }: { entry: BudgetOverviewEntry; onPress: () => void }) {
   const hasBudget = entry.limitCents !== null;
-  const overspent = isBudgetOverspent(entry);
+  const status = budgetStatus(entry);
   const remaining = remainingBudgetCents(entry);
+  const statusTextColor =
+    status === "overspent" ? colors.danger : status === "attention" ? colors.warning : undefined;
 
   return (
     <Pressable onPress={onPress} className="gap-2 border-b border-gray-100 px-4 py-3.5 dark:border-gray-800">
@@ -36,14 +38,16 @@ export function BudgetRow({ entry, onPress }: { entry: BudgetOverviewEntry; onPr
 
       {hasBudget ? (
         <>
-          <BudgetProgressBar fraction={budgetProgressFraction(entry)} overspent={overspent} />
+          <BudgetProgressBar fraction={budgetProgressFraction(entry)} status={status} />
           <Text
-            className={overspent ? "text-xs" : "text-xs text-gray-500 dark:text-gray-400"}
-            style={overspent ? { color: colors.danger } : undefined}
+            className={statusTextColor ? "text-xs" : "text-xs text-gray-500 dark:text-gray-400"}
+            style={statusTextColor ? { color: statusTextColor } : undefined}
           >
-            {overspent
+            {status === "overspent"
               ? `Estourado em ${centsToBRL(Math.abs(remaining ?? 0))}`
-              : `Ainda pode gastar ${centsToBRL(remaining ?? 0)}`}
+              : status === "attention"
+                ? `Atenção: ainda pode gastar ${centsToBRL(remaining ?? 0)}`
+                : `Ainda pode gastar ${centsToBRL(remaining ?? 0)}`}
           </Text>
         </>
       ) : entry.spentCents > 0 ? (
