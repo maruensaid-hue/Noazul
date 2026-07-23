@@ -14,6 +14,7 @@ const BENEFITS = [
   "Relatórios em PDF com filtros avançados",
   "Foto dos comprovantes",
   "Exportação de lançamentos (CSV) e backup completo",
+  "Ativar backup automático",
 ];
 
 export default function PaywallScreen() {

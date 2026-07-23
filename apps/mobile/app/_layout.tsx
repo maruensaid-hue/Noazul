@@ -14,6 +14,7 @@ import { ErrorState } from "../src/components/ui/ErrorState";
 import { LoadingState } from "../src/components/ui/LoadingState";
 import migrations from "../drizzle/migrations";
 import { db } from "../src/db/client";
+import { useAutoBackup } from "../src/features/backup/useAutoBackup";
 import { useBillingSync } from "../src/features/billing/useBillingSync";
 import { getActiveProfileId } from "../src/features/profiles/repository";
 import { useSyncPaymentReminders } from "../src/features/reminders/useSyncPaymentReminders";
@@ -21,10 +22,16 @@ import { useProfileStore } from "../src/stores/profileStore";
 
 const queryClient = new QueryClient();
 
-// Needs a QueryClientProvider ancestor (unlike useBillingSync, which is Zustand-only) —
-// rendered inside the provider below rather than called directly in RootLayout.
+// Both touch the DB (or need a QueryClientProvider ancestor, for the reminders
+// one) — rendered inside the post-migration tree below rather than called
+// unconditionally like useBillingSync, which is Zustand-only.
 function PaymentRemindersSync() {
   useSyncPaymentReminders();
+  return null;
+}
+
+function AutoBackupSync() {
+  useAutoBackup();
   return null;
 }
 
@@ -62,6 +69,7 @@ export default function RootLayout() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <QueryClientProvider client={queryClient}>
         <PaymentRemindersSync />
+        <AutoBackupSync />
         <SafeAreaProvider>
           <Stack screenOptions={{ headerShown: false }} />
         </SafeAreaProvider>

@@ -1,10 +1,34 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { getActiveProfileId } from "../profiles/repository";
 import { pickJsonFileText, shareTextFile } from "../../services/fileExport";
 import { useProfileStore } from "../../stores/profileStore";
-import { buildBackupData, exportTransactionsCsv, restoreBackupData, type CsvScope } from "./repository";
+import {
+  buildBackupData,
+  exportTransactionsCsv,
+  getAutoBackupSettings,
+  restoreBackupData,
+  setAutoBackupEnabled,
+  type CsvScope,
+} from "./repository";
 import { backupDataSchema, type BackupData } from "./schema";
+
+const autoBackupSettingsKey = ["app-settings", "auto-backup"] as const;
+
+export function useAutoBackupSettings() {
+  return useQuery({
+    queryKey: autoBackupSettingsKey,
+    queryFn: getAutoBackupSettings,
+  });
+}
+
+export function useSetAutoBackupEnabled() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (enabled: boolean) => setAutoBackupEnabled(enabled),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: autoBackupSettingsKey }),
+  });
+}
 
 function csvFileName(scope: CsvScope): string {
   const today = new Date().toISOString().slice(0, 10);

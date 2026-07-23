@@ -3,11 +3,14 @@ import { useState } from "react";
 import { Alert, Pressable, Text, View } from "react-native";
 
 import { ActionSheetModal } from "../../../src/components/ui/ActionSheetModal";
+import { AUTO_BACKUP_INTERVAL_DAYS } from "../../../src/features/backup/autoBackupSchedule";
 import {
+  useAutoBackupSettings,
   useExportBackup,
   useExportTransactionsCsv,
   usePickBackupFile,
   useRestoreBackup,
+  useSetAutoBackupEnabled,
 } from "../../../src/features/backup/queries";
 import type { BackupData } from "../../../src/features/backup/schema";
 import { currentYearMonth, parseYearMonth, yearMonthLabel } from "../../../src/lib/dates";
@@ -48,9 +51,12 @@ export default function BackupScreen() {
   const exportBackup = useExportBackup();
   const pickBackupFile = usePickBackupFile();
   const restoreBackup = useRestoreBackup();
+  const autoBackupSettingsQuery = useAutoBackupSettings();
+  const setAutoBackupEnabled = useSetAutoBackupEnabled();
 
   const busy =
     exportCsv.isPending || exportBackup.isPending || pickBackupFile.isPending || restoreBackup.isPending;
+  const autoBackupEnabled = autoBackupSettingsQuery.data?.enabled === true;
 
   if (!isPremium) {
     return (
@@ -137,6 +143,19 @@ export default function BackupScreen() {
             onError: (error) => Alert.alert("Arquivo inválido", error.message),
           });
         }}
+      />
+
+      <SettingsRow
+        title={`Backup automático — ${autoBackupEnabled ? "Ativado" : "Desativado"}`}
+        subtitle={
+          autoBackupEnabled
+            ? autoBackupSettingsQuery.data?.lastRunAt
+              ? `A cada ${AUTO_BACKUP_INTERVAL_DAYS} dias, sozinho · último em ${new Date(autoBackupSettingsQuery.data.lastRunAt).toLocaleDateString("pt-BR")}`
+              : `A cada ${AUTO_BACKUP_INTERVAL_DAYS} dias, sozinho · ainda não rodou`
+            : `Gera um backup completo sozinho a cada ${AUTO_BACKUP_INTERVAL_DAYS} dias, sem precisar abrir esta tela.`
+        }
+        disabled={busy || autoBackupSettingsQuery.isLoading}
+        onPress={() => setAutoBackupEnabled.mutate(!autoBackupEnabled)}
       />
 
       <ActionSheetModal

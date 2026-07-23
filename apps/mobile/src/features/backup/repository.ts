@@ -1,10 +1,12 @@
 import { and, eq, isNull, like } from "drizzle-orm";
 
 import { db } from "../../db/client";
-import { budgets, categories, profiles, transactions } from "../../db/schema";
+import { appSettings, budgets, categories, profiles, transactions } from "../../db/schema";
 import { nowIso } from "../../lib/dates";
 import { transactionsToCsv } from "./csv";
 import type { BackupData } from "./schema";
+
+const SETTINGS_ID = "singleton";
 
 export type CsvScope = { type: "month"; yearMonth: string } | { type: "year"; year: number } | { type: "all" };
 
@@ -118,4 +120,37 @@ export async function restoreBackupData(data: BackupData): Promise<void> {
       await tx.insert(budgets).values({ ...budget, deletedAt: null });
     }
   });
+}
+
+export interface AutoBackupSettings {
+  enabled: boolean;
+  lastRunAt: string | null;
+}
+
+export async function getAutoBackupSettings(): Promise<AutoBackupSettings> {
+  const [row] = await db
+    .select({ enabled: appSettings.autoBackupEnabled, lastRunAt: appSettings.lastAutoBackupAt })
+    .from(appSettings)
+    .where(eq(appSettings.id, SETTINGS_ID));
+  return { enabled: row?.enabled ?? false, lastRunAt: row?.lastRunAt ?? null };
+}
+
+export async function setAutoBackupEnabled(enabled: boolean): Promise<void> {
+  await db
+    .insert(appSettings)
+    .values({ id: SETTINGS_ID, autoBackupEnabled: enabled })
+    .onConflictDoUpdate({
+      target: appSettings.id,
+      set: { autoBackupEnabled: enabled, updatedAt: nowIso() },
+    });
+}
+
+export async function recordAutoBackupRun(whenIso: string): Promise<void> {
+  await db
+    .insert(appSettings)
+    .values({ id: SETTINGS_ID, lastAutoBackupAt: whenIso })
+    .onConflictDoUpdate({
+      target: appSettings.id,
+      set: { lastAutoBackupAt: whenIso, updatedAt: nowIso() },
+    });
 }

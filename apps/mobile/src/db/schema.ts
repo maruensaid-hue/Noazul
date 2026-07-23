@@ -75,6 +75,8 @@ export const appSettings = sqliteTable("app_settings", {
   paymentRemindersEnabled: integer("payment_reminders_enabled", { mode: "boolean" })
     .notNull()
     .default(false),
+  autoBackupEnabled: integer("auto_backup_enabled", { mode: "boolean" }).notNull().default(false),
+  lastAutoBackupAt: text("last_auto_backup_at"),
   updatedAt: text("updated_at")
     .notNull()
     .default(sql`(current_timestamp)`),
