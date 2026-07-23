@@ -1,0 +1,19 @@
+{
+  "name": "noazul",
+  "private": true,
+  "packageManager": "pnpm@10.33.0",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev": "pnpm --filter mobile dev",
+    "dev:sync": "pnpm --filter web-sync dev",
+    "test": "pnpm -r test",
+    "lint": "pnpm -r lint",
+    "typecheck": "pnpm -r typecheck",
+    "db:generate": "pnpm --filter mobile drizzle-kit generate",
+    "db:migrate:remote": "pnpm --filter web-sync prisma migrate deploy",
+    "build:android": "pnpm --filter mobile exec eas build -p android --profile production",
+    "ota": "pnpm --filter mobile exec eas update --branch production"
+  }
+}
