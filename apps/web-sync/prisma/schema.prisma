@@ -1,0 +1,60 @@
+// Backend de pagamento direto (Mercado Pago) — ver noazul-blueprint.md secao 3.3 para
+// o schema completo de sync (Fase 6, ainda nao implementado). Este arquivo cobre so o
+// necessario para: identificar o usuario (via Supabase Auth) e controlar status Premium.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+/// Espelha auth.users do Supabase — id é o mesmo UUID do usuário autenticado,
+/// criado sob demanda na primeira chamada autenticada (ver server/getOrCreateUser.ts).
+model User {
+  id            String    @id
+  email         String    @unique
+  isPremium     Boolean   @default(false)
+  /// null quando isPremium=false, ou quando o plano é vitalício (sem expiração).
+  premiumUntil  DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  payments      Payment[]
+}
+
+enum SubscriptionPlan {
+  MONTHLY
+  ANNUAL
+  LIFETIME
+}
+
+enum PaymentStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  REFUNDED
+  CANCELED
+}
+
+/// Um registro por cobrança criada (preference para vitalício, preapproval para
+/// mensal/anual) — atualizado pelo webhook do Mercado Pago conforme o status muda.
+model Payment {
+  id                String        @id @default(cuid())
+  userId            String
+  user              User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  plan              SubscriptionPlan
+  status            PaymentStatus @default(PENDING)
+  amountCents       Int
+  /// ID da preference (Checkout Pro) — cobrança única, plano LIFETIME.
+  mpPreferenceId    String?       @unique
+  /// ID do pagamento retornado pelo Mercado Pago após aprovado (plano LIFETIME).
+  mpPaymentId       String?       @unique
+  /// ID da assinatura recorrente (preapproval) — planos MONTHLY/ANNUAL.
+  mpPreapprovalId   String?       @unique
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  @@index([userId])
+}
