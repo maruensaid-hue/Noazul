@@ -16,9 +16,17 @@ import migrations from "../drizzle/migrations";
 import { db } from "../src/db/client";
 import { useBillingSync } from "../src/features/billing/useBillingSync";
 import { getActiveProfileId } from "../src/features/profiles/repository";
+import { useSyncPaymentReminders } from "../src/features/reminders/useSyncPaymentReminders";
 import { useProfileStore } from "../src/stores/profileStore";
 
 const queryClient = new QueryClient();
+
+// Needs a QueryClientProvider ancestor (unlike useBillingSync, which is Zustand-only) —
+// rendered inside the provider below rather than called directly in RootLayout.
+function PaymentRemindersSync() {
+  useSyncPaymentReminders();
+  return null;
+}
 
 export default function RootLayout() {
   const { success: migrated, error: migrationError } = useMigrations(db, migrations);
@@ -53,6 +61,7 @@ export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <QueryClientProvider client={queryClient}>
+        <PaymentRemindersSync />
         <SafeAreaProvider>
           <Stack screenOptions={{ headerShown: false }} />
         </SafeAreaProvider>

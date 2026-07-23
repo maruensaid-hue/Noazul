@@ -67,6 +67,17 @@ export const transactions = sqliteTable(
   ],
 );
 
+/** Singleton row (id always "singleton") for device-local app preferences — not per-profile, not synced. */
+export const appSettings = sqliteTable("app_settings", {
+  id: text("id").primaryKey(),
+  paymentRemindersEnabled: integer("payment_reminders_enabled", { mode: "boolean" })
+    .notNull()
+    .default(false),
+  updatedAt: text("updated_at")
+    .notNull()
+    .default(sql`(current_timestamp)`),
+});
+
 export const budgets = sqliteTable(
   "budgets",
   {

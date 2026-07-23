@@ -51,6 +51,12 @@ const config: ExpoConfig = {
         iosAppId: process.env.EXPO_PUBLIC_ADMOB_APP_ID_IOS || TEST_ADMOB_APP_ID_IOS,
       },
     ],
+    [
+      "expo-notifications",
+      {
+        color: "#2563EB",
+      },
+    ],
   ],
   experiments: {
     typedRoutes: true,

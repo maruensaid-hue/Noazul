@@ -1,10 +1,19 @@
 import { router } from "expo-router";
-import { Pressable, Text, View } from "react-native";
+import { Alert, Pressable, Text, View } from "react-native";
 
+import { FREE_REMINDER_LIMIT } from "../../../src/features/reminders/gate";
+import {
+  usePaymentRemindersEnabled,
+  useSetPaymentRemindersEnabled,
+} from "../../../src/features/reminders/queries";
+import { requestPermission } from "../../../src/services/notifications";
 import { useBillingStore } from "../../../src/stores/billingStore";
 
 export default function SettingsScreen() {
   const isPremium = useBillingStore((state) => state.isPremium);
+  const remindersEnabledQuery = usePaymentRemindersEnabled();
+  const setRemindersEnabled = useSetPaymentRemindersEnabled();
+  const remindersEnabled = remindersEnabledQuery.data === true;
 
   return (
     <View className="flex-1 bg-white dark:bg-gray-900">
@@ -36,6 +45,42 @@ export default function SettingsScreen() {
         ) : (
           <Text className="text-gray-400 dark:text-gray-500">›</Text>
         )}
+      </Pressable>
+
+      <Pressable
+        onPress={() => {
+          if (remindersEnabled) {
+            setRemindersEnabled.mutate(false);
+            return;
+          }
+          requestPermission()
+            .then((granted) => {
+              if (granted) {
+                setRemindersEnabled.mutate(true);
+              } else {
+                Alert.alert(
+                  "Permissão negada",
+                  "Ative as notificações do NoAzul nos ajustes do sistema para receber lembretes de pagamento.",
+                );
+              }
+            })
+            .catch(() => {
+              Alert.alert("Não foi possível ativar", "Tente novamente em instantes.");
+            });
+        }}
+        className="gap-1 border-b border-gray-100 px-4 py-4 dark:border-gray-800"
+      >
+        <View className="flex-row items-center justify-between">
+          <Text className="text-base text-gray-900 dark:text-gray-50">Lembretes de pagamento</Text>
+          <Text className={remindersEnabled ? "text-sm font-medium text-brand-600" : "text-gray-400 dark:text-gray-500"}>
+            {remindersEnabled ? "Ativado" : "Desativado"}
+          </Text>
+        </View>
+        {!isPremium ? (
+          <Text className="text-xs text-gray-400 dark:text-gray-500">
+            Grátis: lembretes para até {FREE_REMINDER_LIMIT} contas mais próximas · Premium: ilimitados
+          </Text>
+        ) : null}
       </Pressable>
 
       <Pressable

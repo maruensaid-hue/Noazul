@@ -10,6 +10,7 @@ import { useBillingStore } from "../src/stores/billingStore";
 const BENEFITS = [
   "Perfis ilimitados (casa, MEI, bico)",
   "Sem anúncios",
+  "Notificações de pagamento ilimitadas",
   "Exportação de lançamentos (CSV) e backup completo",
 ];
 
