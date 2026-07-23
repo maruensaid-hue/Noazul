@@ -56,6 +56,8 @@ export const transactions = sqliteTable(
     recurrenceId: text("recurrence_id"),
     installmentNo: integer("installment_no"),
     installmentOf: integer("installment_of"),
+    /** file:// URI in app-private storage (see services/receipts.ts) — never a remote URL. */
+    receiptUri: text("receipt_uri"),
     deletedAt: text("deleted_at"),
     updatedAt: text("updated_at")
       .notNull()

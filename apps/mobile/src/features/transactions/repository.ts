@@ -48,6 +48,7 @@ export async function createTransaction(
     amountCents: input.amountCents,
     dueDate: input.dueDate,
     paidAt: input.status === "PAID" ? nowIso() : null,
+    receiptUri: input.receiptUri,
   });
   return id;
 }
@@ -63,6 +64,7 @@ export async function updateTransaction(id: string, input: TransactionInput): Pr
       amountCents: input.amountCents,
       dueDate: input.dueDate,
       paidAt: input.status === "PAID" ? nowIso() : null,
+      receiptUri: input.receiptUri,
       updatedAt: nowIso(),
     })
     .where(eq(transactions.id, id));
@@ -124,8 +126,9 @@ export async function moveTransactionByMonths(id: string, deltaMonths: number): 
 /**
  * Materializes a recurring series (fixed monthly or installments, see
  * lib/recurrence.ts) as one row per occurrence sharing a fresh recurrenceId.
- * Only the first occurrence inherits `input.status` — future occurrences
- * always start PENDING, since a bill due next year can't already be paid.
+ * Only the first occurrence inherits `input.status`/`input.receiptUri` —
+ * future occurrences always start PENDING with no receipt, since a bill due
+ * next year can't already be paid or have a photo of its own yet.
  */
 export async function createRecurringSeries(
   profileId: string,
@@ -135,7 +138,8 @@ export async function createRecurringSeries(
   const recurrenceId = newId();
   await db.transaction(async (tx) => {
     for (const [index, occurrence] of occurrences.entries()) {
-      const status = index === 0 ? input.status : "PENDING";
+      const isFirst = index === 0;
+      const status = isFirst ? input.status : "PENDING";
       await tx.insert(transactions).values({
         id: newId(),
         profileId,
@@ -146,6 +150,7 @@ export async function createRecurringSeries(
         amountCents: input.amountCents,
         dueDate: occurrence.dueDate,
         paidAt: status === "PAID" ? nowIso() : null,
+        receiptUri: isFirst ? input.receiptUri : null,
         recurrenceId,
         installmentNo: occurrence.installmentNo,
         installmentOf: occurrence.installmentOf,

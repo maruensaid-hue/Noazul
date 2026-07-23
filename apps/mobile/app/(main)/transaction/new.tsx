@@ -10,11 +10,13 @@ import {
 import { TransactionForm } from "../../../src/features/transactions/TransactionForm";
 import { currentYearMonth, isValidYearMonth, todayDateString } from "../../../src/lib/dates";
 import { generateFixedRecurrencePlan, generateInstallmentPlan } from "../../../src/lib/recurrence";
+import { useBillingStore } from "../../../src/stores/billingStore";
 import { useProfileStore } from "../../../src/stores/profileStore";
 
 export default function NewTransactionScreen() {
   const { ym } = useLocalSearchParams<{ ym?: string }>();
   const profileId = useProfileStore((state) => state.activeProfileId);
+  const isPremium = useBillingStore((state) => state.isPremium);
   const categoriesQuery = useCategories(profileId);
   const createTransaction = useCreateTransaction(profileId);
   const createSeries = useCreateRecurringSeries(profileId);
@@ -43,11 +45,13 @@ export default function NewTransactionScreen() {
         amountInput: "",
         dueDate: defaultDueDate,
         categoryId: null,
+        receiptUri: null,
       }}
       categories={categoriesQuery.data}
       submitLabel="Adicionar lançamento"
       isSubmitting={createTransaction.isPending || createSeries.isPending}
       showRecurrenceOptions
+      canUseReceipts={isPremium}
       onSubmit={(input, recurrence) => {
         if (recurrence.mode === "single") {
           createTransaction.mutate(input, { onSuccess: () => router.back() });

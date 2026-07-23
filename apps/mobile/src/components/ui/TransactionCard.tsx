@@ -72,8 +72,12 @@ export function TransactionCard({
           >
             {transaction.name}
           </Text>
-          {categoryName ? (
-            <Text className="text-xs text-gray-400 dark:text-gray-500">{categoryName}</Text>
+          {categoryName || transaction.receiptUri ? (
+            <Text className="text-xs text-gray-400 dark:text-gray-500">
+              {categoryName}
+              {categoryName && transaction.receiptUri ? " · " : ""}
+              {transaction.receiptUri ? "📎 comprovante" : ""}
+            </Text>
           ) : null}
         </View>
         <Text

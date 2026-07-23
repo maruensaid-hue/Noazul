@@ -3,12 +3,14 @@
 import journal from './meta/_journal.json';
 import m0000 from './0000_soft_titania.sql';
 import m0001 from './0001_overconfident_human_torch.sql';
+import m0002 from './0002_dashing_cassandra_nova.sql';
 
   export default {
     journal,
     migrations: {
       m0000,
-m0001
+m0001,
+m0002
     }
   }
   

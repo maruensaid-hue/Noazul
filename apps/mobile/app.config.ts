@@ -57,6 +57,13 @@ const config: ExpoConfig = {
         color: "#2563EB",
       },
     ],
+    [
+      "expo-image-picker",
+      {
+        photosPermission: "O NoAzul usa suas fotos para anexar comprovantes aos lançamentos.",
+        cameraPermission: "O NoAzul usa a câmera para fotografar comprovantes de lançamentos.",
+      },
+    ],
   ],
   experiments: {
     typedRoutes: true,

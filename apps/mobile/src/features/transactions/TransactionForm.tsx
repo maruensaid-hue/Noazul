@@ -3,6 +3,7 @@ import { useMemo, useState } from "react";
 import { Platform, Pressable, ScrollView, Text, TextInput, View } from "react-native";
 
 import { CategoryPickerModal } from "../../components/ui/CategoryPickerModal";
+import { ReceiptField } from "../../components/ui/ReceiptField";
 import { SegmentedControl } from "../../components/ui/SegmentedControl";
 import { dateToLocalDateString, localDateStringToDate, yearMonthLabel } from "../../lib/dates";
 import { brlToCents } from "../../lib/money";
@@ -24,6 +25,7 @@ export interface TransactionFormValues {
   amountInput: string;
   dueDate: string;
   categoryId: string | null;
+  receiptUri: string | null;
 }
 
 interface TransactionFormProps {
@@ -33,6 +35,8 @@ interface TransactionFormProps {
   isSubmitting: boolean;
   /** Only offered when creating a brand new transaction, never when editing an occurrence. */
   showRecurrenceOptions?: boolean;
+  /** "Foto do comprovante" is a Premium-only field. */
+  canUseReceipts: boolean;
   onSubmit: (input: TransactionInput, recurrence: RecurrenceSelection) => void;
   onDelete?: () => void;
 }
@@ -59,6 +63,7 @@ export function TransactionForm({
   submitLabel,
   isSubmitting,
   showRecurrenceOptions = false,
+  canUseReceipts,
   onSubmit,
   onDelete,
 }: TransactionFormProps) {
@@ -68,6 +73,7 @@ export function TransactionForm({
   const [amountInput, setAmountInput] = useState(initialValues.amountInput);
   const [dueDate, setDueDate] = useState(initialValues.dueDate);
   const [categoryId, setCategoryId] = useState<string | null>(initialValues.categoryId);
+  const [receiptUri, setReceiptUri] = useState<string | null>(initialValues.receiptUri);
   const [showCategoryPicker, setShowCategoryPicker] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [recurrenceMode, setRecurrenceMode] = useState<RecurrenceSelection["mode"]>("single");
@@ -102,6 +108,7 @@ export function TransactionForm({
       amountCents,
       dueDate,
       categoryId,
+      receiptUri,
     });
 
     if (!result.success) {
@@ -232,6 +239,8 @@ export function TransactionForm({
         <Text className="text-sm font-medium text-gray-600 dark:text-gray-300">Status</Text>
         <SegmentedControl options={STATUS_OPTIONS} value={status} onChange={setStatus} />
       </View>
+
+      <ReceiptField receiptUri={receiptUri} canUseReceipts={canUseReceipts} onChange={setReceiptUri} />
 
       {error ? <Text className="text-sm text-danger-600">{error}</Text> : null}
 

@@ -15,11 +15,13 @@ import { confirmDeleteTransaction, confirmEditScope } from "../../../src/feature
 import { TransactionForm } from "../../../src/features/transactions/TransactionForm";
 import type { TransactionInput } from "../../../src/features/transactions/types";
 import { centsToInputString } from "../../../src/lib/money";
+import { useBillingStore } from "../../../src/stores/billingStore";
 import { useProfileStore } from "../../../src/stores/profileStore";
 
 export default function EditTransactionScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const profileId = useProfileStore((state) => state.activeProfileId);
+  const isPremium = useBillingStore((state) => state.isPremium);
   const transactionQuery = useTransaction(id);
   const categoriesQuery = useCategories(profileId);
   const updateTransaction = useUpdateTransaction(profileId);
@@ -78,10 +80,12 @@ export default function EditTransactionScreen() {
         amountInput: centsToInputString(transaction.amountCents),
         dueDate: transaction.dueDate,
         categoryId: transaction.categoryId,
+        receiptUri: transaction.receiptUri,
       }}
       categories={categoriesQuery.data}
       submitLabel="Salvar alterações"
       isSubmitting={updateTransaction.isPending || updateSeries.isPending}
+      canUseReceipts={isPremium}
       onSubmit={(input) => {
         confirmEditScope(transaction, {
           onOnlyThis: () => saveOnlyThis(input),

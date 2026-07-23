@@ -16,6 +16,8 @@ export const transactionInputSchema = z.object({
   amountCents: z.number().int().positive("Informe um valor maior que zero"),
   dueDate: z.string().refine(isValidDateString, "Data inválida"),
   categoryId: z.string().uuid().nullable(),
+  /** file:// URI in app-private storage (see services/receipts.ts), or null for no receipt. */
+  receiptUri: z.string().nullable(),
 });
 export type TransactionInput = z.infer<typeof transactionInputSchema>;
 
@@ -32,6 +34,7 @@ export interface TransactionRow {
   recurrenceId: string | null;
   installmentNo: number | null;
   installmentOf: number | null;
+  receiptUri: string | null;
 }
 
 /** How a new transaction from the create form should be materialized. */
