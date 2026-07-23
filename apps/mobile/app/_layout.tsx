@@ -14,6 +14,7 @@ import { ErrorState } from "../src/components/ui/ErrorState";
 import { LoadingState } from "../src/components/ui/LoadingState";
 import migrations from "../drizzle/migrations";
 import { db } from "../src/db/client";
+import { useAuthSync } from "../src/features/auth/useAuthSync";
 import { useAutoBackup } from "../src/features/backup/useAutoBackup";
 import { useBillingSync } from "../src/features/billing/useBillingSync";
 import { getActiveProfileId } from "../src/features/profiles/repository";
@@ -41,8 +42,9 @@ export default function RootLayout() {
   const [checkError, setCheckError] = useState<Error | null>(null);
   const setActiveProfileId = useProfileStore((state) => state.setActiveProfileId);
 
-  // Independent of migrations/profile boot gating — billing sync shouldn't block first paint.
+  // Independent of migrations/profile boot gating — neither should block first paint.
   useBillingSync();
+  useAuthSync();
 
   useEffect(() => {
     if (!migrated) return;
