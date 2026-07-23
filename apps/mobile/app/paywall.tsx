@@ -10,7 +10,7 @@ import { useBillingStore } from "../src/stores/billingStore";
 const BENEFITS = [
   "Perfis ilimitados (casa, MEI, bico)",
   "Sem anúncios",
-  "Exportação e backup (em breve)",
+  "Exportação de lançamentos (CSV) e backup completo",
 ];
 
 export default function PaywallScreen() {

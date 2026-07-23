@@ -1,4 +1,4 @@
-import { router, useLocalSearchParams } from "expo-router";
+import { Link, router, useLocalSearchParams } from "expo-router";
 import { useMemo } from "react";
 import { Pressable, ScrollView, Text, View } from "react-native";
 
@@ -58,6 +58,10 @@ export default function YearScreen() {
           <Text className="text-2xl text-gray-900 dark:text-gray-50">→</Text>
         </Pressable>
       </View>
+
+      <Link href={`/(main)/installments/${yearValue}`} className="px-4 py-2 text-sm text-brand-600">
+        Ver compras parceladas →
+      </Link>
 
       {summaryQuery.isLoading ? (
         <LoadingState />

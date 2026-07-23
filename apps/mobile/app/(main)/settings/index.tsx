@@ -38,6 +38,18 @@ export default function SettingsScreen() {
         )}
       </Pressable>
 
+      <Pressable
+        onPress={() => router.push(isPremium ? "/(main)/backup" : "/paywall")}
+        className="flex-row items-center justify-between border-b border-gray-100 px-4 py-4 dark:border-gray-800"
+      >
+        <Text className="text-base text-gray-900 dark:text-gray-50">Exportar e backup</Text>
+        {isPremium ? (
+          <Text className="text-gray-400 dark:text-gray-500">›</Text>
+        ) : (
+          <Text className="text-sm font-medium text-brand-600">Premium</Text>
+        )}
+      </Pressable>
+
       <View className="flex-1 items-center justify-end px-6 pb-10">
         <Text className="text-sm text-gray-400 dark:text-gray-500">NoAzul v0.1.0</Text>
       </View>
