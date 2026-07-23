@@ -8,17 +8,30 @@ module.exports = {
       colors: {
         // Semantic accents (Fase 4 "design tokens"). Same hue in light/dark —
         // these are accent colors, not surfaces, so they don't need a dark variant.
+        // brand/accent sampled directly from the CyberFort logo (blue/orange globe).
         brand: {
-          50: "#EFF6FF",
-          100: "#DBEAFE",
-          200: "#BFDBFE",
-          300: "#93C5FD",
-          400: "#60A5FA",
-          500: "#3B82F6",
-          600: "#2563EB",
-          700: "#1D4ED8",
-          800: "#1E40AF",
-          900: "#1E3A8A",
+          50: "#EFF5FF",
+          100: "#DCEBFF",
+          200: "#B9D6FF",
+          300: "#86B8FF",
+          400: "#4D93FF",
+          500: "#1F71F5",
+          600: "#065FCE",
+          700: "#054AA3",
+          800: "#073B7E",
+          900: "#0A2F5C",
+        },
+        accent: {
+          50: "#FFF4EC",
+          100: "#FFE3CC",
+          200: "#FFC79A",
+          300: "#FFA35F",
+          400: "#FF8935",
+          500: "#FE7A1F",
+          600: "#FE6D0F",
+          700: "#D6560A",
+          800: "#A8420C",
+          900: "#7A320D",
         },
         success: {
           50: "#F0FDF4",

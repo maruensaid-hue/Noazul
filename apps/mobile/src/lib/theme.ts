@@ -6,7 +6,8 @@
  * `warning` Tailwind classes directly.
  */
 export const colors = {
-  brand: "#2563EB",
+  brand: "#065FCE",
+  accent: "#FE6D0F",
   success: "#16A34A",
   danger: "#DC2626",
   warning: "#D97706",

@@ -22,7 +22,7 @@ const config: ExpoConfig = {
   android: {
     package: "br.com.noazul.app",
     adaptiveIcon: {
-      backgroundColor: "#E6F4FE",
+      backgroundColor: "#065FCE",
       foregroundImage: "./assets/android-icon-foreground.png",
       backgroundImage: "./assets/android-icon-background.png",
       monochromeImage: "./assets/android-icon-monochrome.png",
@@ -54,7 +54,7 @@ const config: ExpoConfig = {
     [
       "expo-notifications",
       {
-        color: "#2563EB",
+        color: "#065FCE",
       },
     ],
     [

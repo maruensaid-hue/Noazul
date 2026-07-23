@@ -1,5 +1,5 @@
 import { router } from "expo-router";
-import { Alert, Pressable, Text, View } from "react-native";
+import { Alert, Image, Pressable, Text, View } from "react-native";
 
 import { FREE_REMINDER_LIMIT } from "../../../src/features/reminders/gate";
 import {
@@ -107,8 +107,16 @@ export default function SettingsScreen() {
         )}
       </Pressable>
 
-      <View className="flex-1 items-center justify-end px-6 pb-10">
+      <View className="flex-1 items-center justify-end gap-2 px-6 pb-10">
         <Text className="text-sm text-gray-400 dark:text-gray-500">NoAzul v0.1.0</Text>
+        <View className="flex-row items-center gap-1.5">
+          <Image
+            source={require("../../../assets/cyberfort-mark.png")}
+            className="h-5 w-5"
+            resizeMode="contain"
+          />
+          <Text className="text-xs text-gray-400 dark:text-gray-500">Desenvolvido por CyberFort</Text>
+        </View>
       </View>
     </View>
   );
