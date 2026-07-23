@@ -11,6 +11,8 @@ const BENEFITS = [
   "Perfis ilimitados (casa, MEI, bico)",
   "Sem anúncios",
   "Notificações de pagamento ilimitadas",
+  "Relatórios em PDF com filtros avançados",
+  "Foto dos comprovantes",
   "Exportação de lançamentos (CSV) e backup completo",
 ];
 

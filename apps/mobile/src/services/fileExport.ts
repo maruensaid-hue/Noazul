@@ -10,12 +10,27 @@ export async function shareTextFile(fileName: string, content: string, mimeType:
   const file = new File(Paths.cache, fileName);
   if (file.exists) file.delete();
   file.write(content);
+  await shareFileAt(file.uri, fileName, mimeType);
+}
 
+/**
+ * Renames/copies a file the OS handed back with an opaque generated name
+ * (e.g. expo-print's PDF output) to `fileName`, then opens the share sheet
+ * on it. Used for the PDF report export.
+ */
+export async function shareGeneratedFile(sourceUri: string, fileName: string, mimeType: string): Promise<void> {
+  const destination = new File(Paths.cache, fileName);
+  if (destination.exists) destination.delete();
+  await new File(sourceUri).copy(destination);
+  await shareFileAt(destination.uri, fileName, mimeType);
+}
+
+async function shareFileAt(uri: string, dialogTitle: string, mimeType: string): Promise<void> {
   const isAvailable = await Sharing.isAvailableAsync();
   if (!isAvailable) {
     throw new Error("Compartilhamento não está disponível neste dispositivo.");
   }
-  await Sharing.shareAsync(file.uri, { mimeType, dialogTitle: fileName });
+  await Sharing.shareAsync(uri, { mimeType, dialogTitle });
 }
 
 /**
