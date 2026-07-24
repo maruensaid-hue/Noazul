@@ -4,21 +4,33 @@ import { Modal, Pressable, Text } from "react-native";
 
 import { useProfiles, useSwitchActiveProfile } from "./queries";
 
+interface ProfileSwitcherProps {
+  /** "light" reads on dark/brand backgrounds (e.g. the month header) — defaults to the neutral gray-on-white styling used elsewhere. */
+  variant?: "light" | "dark";
+}
+
 /** Compact header trigger showing the active profile; opens a quick-switch list. */
-export function ProfileSwitcher() {
+export function ProfileSwitcher({ variant = "dark" }: ProfileSwitcherProps) {
   const [open, setOpen] = useState(false);
   const profilesQuery = useProfiles();
   const switchProfile = useSwitchActiveProfile();
 
   const activeProfile = profilesQuery.data?.find((profile) => profile.isDefault);
+  const isLight = variant === "light";
 
   return (
     <>
       <Pressable onPress={() => setOpen(true)} className="flex-row items-center gap-1 px-4 py-2" hitSlop={8}>
-        <Text className="text-sm font-medium text-gray-500 dark:text-gray-400">
+        <Text
+          className={
+            isLight
+              ? "text-sm font-medium text-white"
+              : "text-sm font-medium text-gray-500 dark:text-gray-400"
+          }
+        >
           {activeProfile?.name ?? "Perfil"}
         </Text>
-        <Text className="text-xs text-gray-400">▾</Text>
+        <Text className={isLight ? "text-xs text-white/70" : "text-xs text-gray-400"}>▾</Text>
       </Pressable>
 
       <Modal visible={open} transparent animationType="fade" onRequestClose={() => setOpen(false)}>

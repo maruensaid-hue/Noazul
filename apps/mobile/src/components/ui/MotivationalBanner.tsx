@@ -20,7 +20,7 @@ const TONE_TEXT_CLASSES = {
 export function MotivationalBanner({ safeBalanceCents }: { safeBalanceCents: number }) {
   const tone = motivationalTone(safeBalanceCents);
   return (
-    <View className={`mx-4 mt-3 rounded-xl border px-4 py-3 ${TONE_CLASSES[tone]}`}>
+    <View className={`mx-4 -mt-3 rounded-xl border px-4 py-3 shadow-sm ${TONE_CLASSES[tone]}`}>
       <Text className={`text-sm font-medium ${TONE_TEXT_CLASSES[tone]}`}>
         {motivationalPhrase(safeBalanceCents)}
       </Text>
