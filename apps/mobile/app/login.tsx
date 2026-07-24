@@ -1,42 +1,33 @@
 import { router } from "expo-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Alert, Pressable, Text, TextInput, View } from "react-native";
 
-import { useSendLoginCode, useVerifyLoginCode } from "../src/features/auth/queries";
+import { useSendLoginLink } from "../src/features/auth/queries";
 import { isAuthConfigured } from "../src/services/supabaseClient";
+import { useAuthStore } from "../src/stores/authStore";
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export default function LoginScreen() {
   const [email, setEmail] = useState("");
-  const [code, setCode] = useState("");
-  const [codeSent, setCodeSent] = useState(false);
-  const sendCode = useSendLoginCode();
-  const verifyCode = useVerifyLoginCode();
+  const [linkSent, setLinkSent] = useState(false);
+  const sendLink = useSendLoginLink();
+  const session = useAuthStore((state) => state.session);
 
-  const handleSendCode = () => {
+  // Fires once useLoginDeepLink exchanges the e-mail link's code for a session.
+  useEffect(() => {
+    if (session) router.back();
+  }, [session]);
+
+  const handleSendLink = () => {
     if (!EMAIL_PATTERN.test(email.trim())) {
       Alert.alert("E-mail inválido", "Digite um e-mail válido para continuar.");
       return;
     }
-    sendCode.mutate(email.trim(), {
-      onSuccess: () => setCodeSent(true),
-      onError: (error) => Alert.alert("Não foi possível enviar o código", error.message),
+    sendLink.mutate(email.trim(), {
+      onSuccess: () => setLinkSent(true),
+      onError: (error) => Alert.alert("Não foi possível enviar o link", error.message),
     });
-  };
-
-  const handleVerifyCode = () => {
-    if (code.trim().length < 6) {
-      Alert.alert("Código incompleto", "Digite o código de 6 dígitos que enviamos por e-mail.");
-      return;
-    }
-    verifyCode.mutate(
-      { email: email.trim(), code: code.trim() },
-      {
-        onSuccess: () => router.back(),
-        onError: (error) => Alert.alert("Não foi possível confirmar", error.message),
-      },
-    );
   };
 
   return (
@@ -56,6 +47,20 @@ export default function LoginScreen() {
           <Text className="text-base text-gray-500 dark:text-gray-400">
             Login ainda não está disponível nesta versão. Volte em breve.
           </Text>
+        ) : linkSent ? (
+          <View className="gap-3">
+            <Text className="text-base font-semibold text-gray-900 dark:text-gray-50">
+              Verifique seu e-mail
+            </Text>
+            <Text className="text-base text-gray-600 dark:text-gray-300">
+              Enviamos um link de acesso para {email.trim()}. Abra o e-mail direto no seu
+              celular (onde o NoAzul está instalado) e toque no link — esta tela fecha sozinha
+              assim que você entrar.
+            </Text>
+            <Pressable onPress={() => setLinkSent(false)} className="items-center py-2">
+              <Text className="text-sm text-brand-600">Usar outro e-mail</Text>
+            </Pressable>
+          </View>
         ) : (
           <>
             <View className="gap-1.5">
@@ -63,65 +68,24 @@ export default function LoginScreen() {
               <TextInput
                 value={email}
                 onChangeText={setEmail}
-                editable={!codeSent}
                 placeholder="voce@exemplo.com"
                 placeholderTextColor="#9CA3AF"
                 autoCapitalize="none"
                 autoCorrect={false}
                 keyboardType="email-address"
                 className="rounded-lg border border-gray-200 px-3 py-3 text-base text-gray-900 dark:border-gray-700 dark:text-gray-50"
-                style={{ opacity: codeSent ? 0.6 : 1 }}
               />
             </View>
-
-            {!codeSent ? (
-              <Pressable
-                disabled={sendCode.isPending}
-                onPress={handleSendCode}
-                className="items-center rounded-full bg-brand-600 py-4"
-                style={{ opacity: sendCode.isPending ? 0.6 : 1 }}
-              >
-                <Text className="text-base font-bold text-white">
-                  {sendCode.isPending ? "Enviando..." : "Enviar código por e-mail"}
-                </Text>
-              </Pressable>
-            ) : (
-              <>
-                <View className="gap-1.5">
-                  <Text className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Código recebido por e-mail
-                  </Text>
-                  <TextInput
-                    value={code}
-                    onChangeText={setCode}
-                    placeholder="000000"
-                    placeholderTextColor="#9CA3AF"
-                    keyboardType="number-pad"
-                    maxLength={6}
-                    className="rounded-lg border border-gray-200 px-3 py-3 text-center text-2xl tracking-[8px] text-gray-900 dark:border-gray-700 dark:text-gray-50"
-                  />
-                </View>
-                <Pressable
-                  disabled={verifyCode.isPending}
-                  onPress={handleVerifyCode}
-                  className="items-center rounded-full bg-accent-600 py-4"
-                  style={{ opacity: verifyCode.isPending ? 0.6 : 1 }}
-                >
-                  <Text className="text-base font-bold text-white">
-                    {verifyCode.isPending ? "Confirmando..." : "Confirmar código"}
-                  </Text>
-                </Pressable>
-                <Pressable
-                  onPress={() => {
-                    setCodeSent(false);
-                    setCode("");
-                  }}
-                  className="items-center py-2"
-                >
-                  <Text className="text-sm text-brand-600">Usar outro e-mail</Text>
-                </Pressable>
-              </>
-            )}
+            <Pressable
+              disabled={sendLink.isPending}
+              onPress={handleSendLink}
+              className="items-center rounded-full bg-brand-600 py-4"
+              style={{ opacity: sendLink.isPending ? 0.6 : 1 }}
+            >
+              <Text className="text-base font-bold text-white">
+                {sendLink.isPending ? "Enviando..." : "Enviar link por e-mail"}
+              </Text>
+            </Pressable>
           </>
         )}
       </View>

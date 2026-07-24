@@ -1,23 +1,23 @@
 import { isAuthConfigured, supabase } from "../../services/supabaseClient";
 
-/** Sends a 6-digit login code to the given e-mail via Supabase Auth (email OTP). */
-export async function sendLoginCode(email: string): Promise<void> {
+export const LOGIN_REDIRECT_URL = "noazul://login";
+
+/** Sends a one-tap login link to the given e-mail via Supabase Auth (PKCE). */
+export async function sendLoginLink(email: string): Promise<void> {
   if (!isAuthConfigured()) {
     throw new Error("Login por e-mail ainda não está disponível nesta versão.");
   }
   const { error } = await supabase.auth.signInWithOtp({
     email,
-    options: { shouldCreateUser: true },
+    options: { shouldCreateUser: true, emailRedirectTo: LOGIN_REDIRECT_URL },
   });
   if (error) throw new Error(error.message);
 }
 
-/** Verifies the code the user typed and establishes a session (persisted automatically). */
-export async function verifyLoginCode(email: string, code: string): Promise<void> {
-  const { data, error } = await supabase.auth.verifyOtp({ email, token: code, type: "email" });
-  if (error || !data.session) {
-    throw new Error(error?.message ?? "Código inválido ou expirado.");
-  }
+/** Exchanges the ?code=... from the noazul://login redirect for a session — see useLoginDeepLink. */
+export async function completeLoginFromCode(code: string): Promise<void> {
+  const { error } = await supabase.auth.exchangeCodeForSession(code);
+  if (error) throw new Error(error.message);
 }
 
 export async function signOut(): Promise<void> {

@@ -21,6 +21,9 @@ export const supabase = createClient(supabaseUrl || "https://placeholder.supabas
     autoRefreshToken: true,
     persistSession: true,
     detectSessionInUrl: false,
+    // PKCE so the login link's noazul://login?code=... redirect can be
+    // exchanged for a session with exchangeCodeForSession — see useLoginDeepLink.
+    flowType: "pkce",
   },
 });
 

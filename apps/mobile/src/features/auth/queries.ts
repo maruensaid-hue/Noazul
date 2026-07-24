@@ -1,16 +1,10 @@
 import { useMutation } from "@tanstack/react-query";
 
-import { sendLoginCode, signOut, verifyLoginCode } from "./repository";
+import { sendLoginLink, signOut } from "./repository";
 
-export function useSendLoginCode() {
+export function useSendLoginLink() {
   return useMutation({
-    mutationFn: (email: string) => sendLoginCode(email),
-  });
-}
-
-export function useVerifyLoginCode() {
-  return useMutation({
-    mutationFn: ({ email, code }: { email: string; code: string }) => verifyLoginCode(email, code),
+    mutationFn: (email: string) => sendLoginLink(email),
   });
 }
 

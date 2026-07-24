@@ -15,6 +15,7 @@ import { LoadingState } from "../src/components/ui/LoadingState";
 import migrations from "../drizzle/migrations";
 import { db } from "../src/db/client";
 import { useAuthSync } from "../src/features/auth/useAuthSync";
+import { useLoginDeepLink } from "../src/features/auth/useLoginDeepLink";
 import { useAutoBackup } from "../src/features/backup/useAutoBackup";
 import { useBillingSync } from "../src/features/billing/useBillingSync";
 import { getActiveProfileId } from "../src/features/profiles/repository";
@@ -45,6 +46,7 @@ export default function RootLayout() {
   // Independent of migrations/profile boot gating — neither should block first paint.
   useBillingSync();
   useAuthSync();
+  useLoginDeepLink();
 
   useEffect(() => {
     if (!migrated) return;
