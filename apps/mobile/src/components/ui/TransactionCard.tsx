@@ -52,28 +52,28 @@ export function TransactionCard({
       <Pressable
         onPress={() => onPress(transaction.id)}
         onLongPress={() => onLongPress(transaction.id)}
-        className="flex-row items-center gap-3 border-b border-gray-100 bg-white px-4 py-3 dark:border-gray-800 dark:bg-gray-900"
+        className="flex-row items-center gap-3 border-b border-gray-100 bg-white px-4 py-3.5 dark:border-gray-800 dark:bg-gray-900"
       >
         <View className="w-9 items-center">
           <Text className="text-[10px] text-gray-400 dark:text-gray-500">DIA</Text>
-          <Text className="text-base font-semibold text-gray-700 dark:text-gray-300">{day}</Text>
+          <Text className="text-lg font-semibold text-gray-700 dark:text-gray-300">{day}</Text>
         </View>
         <View
-          className="h-2.5 w-2.5 rounded-full"
+          className="h-3 w-3 rounded-full"
           style={{ backgroundColor: categoryColor ?? colors.neutral }}
         />
         <View className="flex-1">
           <Text
             className={
               isPaid
-                ? "text-base text-gray-400 line-through dark:text-gray-500"
-                : "text-base text-gray-900 dark:text-gray-50"
+                ? "text-lg text-gray-400 line-through dark:text-gray-500"
+                : "text-lg font-medium text-gray-900 dark:text-gray-50"
             }
           >
             {transaction.name}
           </Text>
           {categoryName || transaction.receiptUri ? (
-            <Text className="text-xs text-gray-400 dark:text-gray-500">
+            <Text className="text-sm text-gray-400 dark:text-gray-500">
               {categoryName}
               {categoryName && transaction.receiptUri ? " · " : ""}
               {transaction.receiptUri ? "📎 comprovante" : ""}
@@ -81,7 +81,7 @@ export function TransactionCard({
           ) : null}
         </View>
         <Text
-          className="text-base font-semibold"
+          className="text-lg font-bold"
           style={{ color: isIncome ? colors.success : isPaid ? colors.neutral : colors.danger }}
         >
           {isIncome ? "+" : "-"}

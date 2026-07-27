@@ -1,12 +1,15 @@
 import { router } from "expo-router";
 import { Alert, Image, Pressable, Text, View } from "react-native";
 
+import { useSignOut } from "../../../src/features/auth/queries";
 import { FREE_REMINDER_LIMIT } from "../../../src/features/reminders/gate";
 import {
   usePaymentRemindersEnabled,
   useSetPaymentRemindersEnabled,
 } from "../../../src/features/reminders/queries";
 import { requestPermission } from "../../../src/services/notifications";
+import { isAuthConfigured } from "../../../src/services/supabaseClient";
+import { useAuthStore } from "../../../src/stores/authStore";
 import { useBillingStore } from "../../../src/stores/billingStore";
 
 export default function SettingsScreen() {
@@ -14,6 +17,8 @@ export default function SettingsScreen() {
   const remindersEnabledQuery = usePaymentRemindersEnabled();
   const setRemindersEnabled = useSetPaymentRemindersEnabled();
   const remindersEnabled = remindersEnabledQuery.data === true;
+  const session = useAuthStore((state) => state.session);
+  const signOut = useSignOut();
 
   return (
     <View className="flex-1 bg-white dark:bg-gray-900">
@@ -32,6 +37,27 @@ export default function SettingsScreen() {
         <Text className="text-base text-gray-900 dark:text-gray-50">Perfis</Text>
         <Text className="text-gray-400 dark:text-gray-500">›</Text>
       </Pressable>
+
+      {isAuthConfigured() ? (
+        <Pressable
+          onPress={() => {
+            if (!session) {
+              router.push("/login");
+              return;
+            }
+            Alert.alert("Conta", session.user.email, [
+              { text: "Cancelar", style: "cancel" },
+              { text: "Sair", style: "destructive", onPress: () => signOut.mutate() },
+            ]);
+          }}
+          className="flex-row items-center justify-between border-b border-gray-100 px-4 py-4 dark:border-gray-800"
+        >
+          <Text className="text-base text-gray-900 dark:text-gray-50">Conta</Text>
+          <Text className="text-sm text-gray-400 dark:text-gray-500">
+            {session ? session.user.email : "Entrar"}
+          </Text>
+        </Pressable>
+      ) : null}
 
       <Pressable
         onPress={() => {

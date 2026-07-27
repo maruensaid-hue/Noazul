@@ -3,13 +3,16 @@ import Svg, { Circle } from "react-native-svg";
 
 import type { CategorySlice } from "../../features/summary/derived";
 
-const SIZE = 160;
-const STROKE_WIDTH = 24;
-const RADIUS = (SIZE - STROKE_WIDTH) / 2;
-const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
+const DEFAULT_SIZE = 160;
+const DEFAULT_STROKE_WIDTH = 24;
 
 interface DonutChartProps {
   slices: readonly CategorySlice[];
+  /** Defaults to the full-size chart used in the summary sheet — pass smaller values for compact placements (e.g. the month header). */
+  size?: number;
+  strokeWidth?: number;
+  /** Track color for the empty state / unfilled remainder — defaults to a neutral gray, use a translucent white on dark backgrounds. */
+  trackColor?: string;
 }
 
 /** Fraction of the circle already drawn before each slice, i.e. its start offset. */
@@ -27,19 +30,28 @@ function cumulativeFractions(slices: readonly CategorySlice[]): number[] {
  * Ring chart drawn with plain react-native-svg (no chart library — see
  * noazul-blueprint.md §6.3: "evitar libs de gráfico pesadas"). Each slice is a
  * Circle whose stroke-dasharray/-dashoffset carves out its arc; rotating -90°
- * moves the shared start point to 12 o'clock.
+ * moves the shared start point to 12 o'clock. Recomputes (and visibly
+ * reshapes) every time `slices` changes, e.g. right after a new expense is saved.
  */
-export function DonutChart({ slices }: DonutChartProps) {
+export function DonutChart({
+  slices,
+  size = DEFAULT_SIZE,
+  strokeWidth = DEFAULT_STROKE_WIDTH,
+  trackColor = "#E5E7EB",
+}: DonutChartProps) {
+  const radius = (size - strokeWidth) / 2;
+  const circumference = 2 * Math.PI * radius;
+
   if (slices.length === 0) {
     return (
-      <View style={{ width: SIZE, height: SIZE }} className="items-center justify-center">
-        <Svg width={SIZE} height={SIZE}>
+      <View style={{ width: size, height: size }} className="items-center justify-center">
+        <Svg width={size} height={size}>
           <Circle
-            cx={SIZE / 2}
-            cy={SIZE / 2}
-            r={RADIUS}
-            stroke="#E5E7EB"
-            strokeWidth={STROKE_WIDTH}
+            cx={size / 2}
+            cy={size / 2}
+            r={radius}
+            stroke={trackColor}
+            strokeWidth={strokeWidth}
             fill="none"
           />
         </Svg>
@@ -50,24 +62,24 @@ export function DonutChart({ slices }: DonutChartProps) {
   const startOffsets = cumulativeFractions(slices);
 
   return (
-    <Svg width={SIZE} height={SIZE}>
+    <Svg width={size} height={size}>
       {slices.map((slice, index) => {
-        const dashLength = slice.fraction * CIRCUMFERENCE;
-        const dashOffset = -startOffsets[index]! * CIRCUMFERENCE;
+        const dashLength = slice.fraction * circumference;
+        const dashOffset = -startOffsets[index]! * circumference;
         return (
           <Circle
             key={slice.categoryId ?? "none"}
-            cx={SIZE / 2}
-            cy={SIZE / 2}
-            r={RADIUS}
+            cx={size / 2}
+            cy={size / 2}
+            r={radius}
             stroke={slice.color}
-            strokeWidth={STROKE_WIDTH}
-            strokeDasharray={`${dashLength} ${CIRCUMFERENCE - dashLength}`}
+            strokeWidth={strokeWidth}
+            strokeDasharray={`${dashLength} ${circumference - dashLength}`}
             strokeDashoffset={dashOffset}
             strokeLinecap="butt"
             fill="none"
             rotation={-90}
-            origin={`${SIZE / 2}, ${SIZE / 2}`}
+            origin={`${size / 2}, ${size / 2}`}
           />
         );
       })}

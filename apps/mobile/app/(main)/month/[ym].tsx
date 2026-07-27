@@ -4,10 +4,12 @@ import { FlatList, Pressable, Text, View } from "react-native";
 
 import { ActionSheetModal } from "../../../src/components/ui/ActionSheetModal";
 import { AdBanner } from "../../../src/components/ui/AdBanner";
+import { DonutChart } from "../../../src/components/ui/DonutChart";
 import { EmptyState } from "../../../src/components/ui/EmptyState";
 import { ErrorState } from "../../../src/components/ui/ErrorState";
 import { LoadingState } from "../../../src/components/ui/LoadingState";
 import { MotivationalBanner } from "../../../src/components/ui/MotivationalBanner";
+import { StatChip } from "../../../src/components/ui/StatChip";
 import { TransactionCard } from "../../../src/components/ui/TransactionCard";
 import { useCategories } from "../../../src/features/categories/queries";
 import { ProfileSwitcher } from "../../../src/features/profiles/ProfileSwitcher";
@@ -25,6 +27,7 @@ import {
 import { confirmDeleteTransaction } from "../../../src/features/transactions/seriesActions";
 import type { TransactionRow } from "../../../src/features/transactions/types";
 import { isValidYearMonth, shiftYearMonth, yearMonthLabel } from "../../../src/lib/dates";
+import { centsToBRL } from "../../../src/lib/money";
 import { useBillingStore } from "../../../src/stores/billingStore";
 import { useProfileStore } from "../../../src/stores/profileStore";
 
@@ -98,42 +101,73 @@ export default function MonthScreen() {
       ]
     : [];
 
+  const summary = summaryQuery.data;
+
   return (
     <View className="flex-1 bg-white dark:bg-gray-900">
-      <View className="flex-row items-center justify-between pt-14">
-        <ProfileSwitcher />
-        <Link href="/(main)/settings" className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
-          Ajustes
-        </Link>
+      <View className="gap-4 rounded-b-3xl bg-brand-600 pb-5 pt-14">
+        <View className="flex-row items-center justify-between">
+          <ProfileSwitcher variant="light" />
+          <Link href="/(main)/settings" className="px-4 py-2 text-sm text-white/80">
+            Ajustes
+          </Link>
+        </View>
+
+        <View className="flex-row items-center justify-between px-4">
+          <Pressable
+            onPress={() => router.setParams({ ym: shiftYearMonth(yearMonth, -1) })}
+            hitSlop={12}
+          >
+            <Text className="text-2xl text-white">←</Text>
+          </Pressable>
+          <Text className="text-lg font-semibold capitalize text-white">
+            {yearMonthLabel(yearMonth)}
+          </Text>
+          <Pressable
+            onPress={() => router.setParams({ ym: shiftYearMonth(yearMonth, 1) })}
+            hitSlop={12}
+          >
+            <Text className="text-2xl text-white">→</Text>
+          </Pressable>
+        </View>
+
+        {summary ? (
+          <View className="flex-row items-center justify-between px-5">
+            <View className="flex-1 gap-1 pr-3">
+              <Text className="text-sm text-white/70">Saldo seguro</Text>
+              <Text
+                className="text-4xl font-extrabold text-white"
+                numberOfLines={1}
+                adjustsFontSizeToFit
+              >
+                {centsToBRL(summary.safeBalanceCents)}
+              </Text>
+            </View>
+            <DonutChart
+              slices={categorySlices}
+              size={92}
+              strokeWidth={14}
+              trackColor="rgba(255,255,255,0.15)"
+            />
+          </View>
+        ) : null}
+
+        {summary ? (
+          <View className="flex-row gap-2 px-4">
+            <StatChip label="Receita" cents={summary.incomeCents} tone="success" />
+            <StatChip label="Despesas" cents={summary.expenseTotalCents} tone="danger" />
+            <StatChip label="A pagar" cents={summary.expensePendingCents} tone="warning" />
+          </View>
+        ) : null}
       </View>
 
-      <View className="flex-row items-center justify-between border-b border-gray-100 px-4 pb-3 pt-1 dark:border-gray-800">
-        <Pressable
-          onPress={() => router.setParams({ ym: shiftYearMonth(yearMonth, -1) })}
-          hitSlop={12}
-        >
-          <Text className="text-2xl text-gray-900 dark:text-gray-50">←</Text>
-        </Pressable>
-        <Text className="text-lg font-semibold capitalize text-gray-900 dark:text-gray-50">
-          {yearMonthLabel(yearMonth)}
-        </Text>
-        <Pressable
-          onPress={() => router.setParams({ ym: shiftYearMonth(yearMonth, 1) })}
-          hitSlop={12}
-        >
-          <Text className="text-2xl text-gray-900 dark:text-gray-50">→</Text>
-        </Pressable>
-      </View>
-
-      {summaryQuery.data ? (
-        <MotivationalBanner safeBalanceCents={summaryQuery.data.safeBalanceCents} />
-      ) : null}
+      {summary ? <MotivationalBanner safeBalanceCents={summary.safeBalanceCents} /> : null}
 
       <View className="flex-row items-center justify-between px-4 py-2">
-        <Link href={`/(main)/budget?ym=${yearMonth}`} className="text-sm text-brand-600">
+        <Link href={`/(main)/budget?ym=${yearMonth}`} className="text-sm font-medium text-brand-600">
           Ver orçamentos do mês →
         </Link>
-        <Link href={`/(main)/year/${yearMonth.slice(0, 4)}`} className="text-sm text-brand-600">
+        <Link href={`/(main)/year/${yearMonth.slice(0, 4)}`} className="text-sm font-medium text-brand-600">
           Ver resumo anual →
         </Link>
       </View>

@@ -1,13 +1,18 @@
 import { router } from "expo-router";
+import * as WebBrowser from "expo-web-browser";
 import { useState } from "react";
-import { Alert, Image, Pressable, ScrollView, Text, View } from "react-native";
+import { ActivityIndicator, Alert, Image, Pressable, ScrollView, Text, View } from "react-native";
 import type { PurchasesPackage } from "react-native-purchases";
 
 import { EmptyState } from "../src/components/ui/EmptyState";
 import { LoadingState } from "../src/components/ui/LoadingState";
 import { useCurrentOffering, usePurchasePackage, useRestorePurchases } from "../src/features/billing/queries";
 import { annualSavingsPercent, findByType, packageTypeLabel } from "../src/features/billing/planPresentation";
+import { DIRECT_PLANS } from "../src/features/payments/directPlans";
+import { useCreateDirectPayment, useEntitlement, useRefreshEntitlement } from "../src/features/payments/queries";
 import { isBillingConfigured } from "../src/services/purchases";
+import type { DirectPlanId } from "../src/services/syncApi";
+import { useAuthStore } from "../src/stores/authStore";
 import { useBillingStore } from "../src/stores/billingStore";
 
 const BENEFITS = [
@@ -69,11 +74,74 @@ function PlanCard({
   );
 }
 
+function DirectPlanCard({
+  plan,
+  selected,
+  onPress,
+}: {
+  plan: (typeof DIRECT_PLANS)[number];
+  selected: boolean;
+  onPress: () => void;
+}) {
+  return (
+    <Pressable
+      onPress={onPress}
+      className={`gap-1 rounded-2xl border-2 p-4 ${
+        selected
+          ? "border-brand-600 bg-brand-50 dark:bg-brand-900/20"
+          : "border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800"
+      }`}
+    >
+      {plan.badge ? (
+        <View className="mb-1 self-start rounded-full bg-accent-600 px-2.5 py-0.5">
+          <Text className="text-xs font-semibold text-white">{plan.badge}</Text>
+        </View>
+      ) : null}
+      <View className="flex-row items-center gap-3">
+        <View
+          className={`h-5 w-5 items-center justify-center rounded-full border-2 ${
+            selected ? "border-brand-600" : "border-gray-300 dark:border-gray-600"
+          }`}
+        >
+          {selected ? <View className="h-2.5 w-2.5 rounded-full bg-brand-600" /> : null}
+        </View>
+        <View className="flex-1">
+          <Text className="text-base font-semibold text-gray-900 dark:text-gray-50">{plan.label}</Text>
+          {plan.subtitle ? <Text className="text-sm text-success-600">{plan.subtitle}</Text> : null}
+        </View>
+        <Text className="text-lg font-bold text-gray-900 dark:text-gray-50">{plan.priceLabel}</Text>
+      </View>
+    </Pressable>
+  );
+}
+
 export default function PaywallScreen() {
   const isPremium = useBillingStore((state) => state.isPremium);
   const offeringQuery = useCurrentOffering();
   const purchase = usePurchasePackage();
   const restore = useRestorePurchases();
+
+  const session = useAuthStore((state) => state.session);
+  const [selectedDirectPlanId, setSelectedDirectPlanId] = useState<DirectPlanId>("ANNUAL");
+  const createDirectPayment = useCreateDirectPayment();
+  const entitlementQuery = useEntitlement();
+  const refreshEntitlement = useRefreshEntitlement();
+
+  const handleDirectPayment = () => {
+    createDirectPayment.mutate(selectedDirectPlanId, {
+      onSuccess: async ({ initPoint }) => {
+        const result = await WebBrowser.openAuthSessionAsync(initPoint, "noazul://payment/return");
+        refreshEntitlement();
+        if (result.type === "success") {
+          Alert.alert(
+            "Pagamento em processamento",
+            "Assim que a confirmação chegar do Mercado Pago, seu Premium é ativado automaticamente. Isso costuma levar só alguns instantes.",
+          );
+        }
+      },
+      onError: (error) => Alert.alert("Não foi possível iniciar o pagamento", error.message),
+    });
+  };
 
   const packages = offeringQuery.data?.availablePackages ?? [];
   const monthlyPkg = findByType(packages, "MONTHLY");
@@ -163,6 +231,57 @@ export default function PaywallScreen() {
             </View>
           ))}
         </View>
+
+        {!isPremium ? (
+          <View className="gap-3 border-t border-gray-100 pt-6 dark:border-gray-800">
+            <View className="gap-1">
+              <Text className="text-base font-semibold text-gray-900 dark:text-gray-50">
+                Ou pague direto com Pix, boleto ou cartão
+              </Text>
+              <Text className="text-sm text-gray-500 dark:text-gray-400">
+                Sem passar pela loja de aplicativos — pagamento direto para a CyberFort.
+              </Text>
+            </View>
+
+            {!session ? (
+              <Pressable
+                onPress={() => router.push("/login")}
+                className="items-center rounded-full border-2 border-brand-600 py-3.5"
+              >
+                <Text className="text-base font-bold text-brand-600">Entrar com e-mail para continuar</Text>
+              </Pressable>
+            ) : (
+              <>
+                <View className="gap-3">
+                  {DIRECT_PLANS.map((plan) => (
+                    <DirectPlanCard
+                      key={plan.id}
+                      plan={plan}
+                      selected={selectedDirectPlanId === plan.id}
+                      onPress={() => setSelectedDirectPlanId(plan.id)}
+                    />
+                  ))}
+                </View>
+                <Pressable
+                  disabled={createDirectPayment.isPending}
+                  onPress={handleDirectPayment}
+                  className="flex-row items-center justify-center gap-2 rounded-full border-2 border-brand-600 py-3.5"
+                  style={{ opacity: createDirectPayment.isPending ? 0.6 : 1 }}
+                >
+                  {createDirectPayment.isPending ? <ActivityIndicator color="#065FCE" /> : null}
+                  <Text className="text-base font-bold text-brand-600">
+                    {createDirectPayment.isPending ? "Abrindo pagamento..." : "Pagar direto"}
+                  </Text>
+                </Pressable>
+                {entitlementQuery.data && !entitlementQuery.data.isPremium ? (
+                  <Text className="text-center text-xs text-gray-400 dark:text-gray-500">
+                    Conectado como {session.user.email}
+                  </Text>
+                ) : null}
+              </>
+            )}
+          </View>
+        ) : null}
 
         {!isPremium ? (
           <Pressable
