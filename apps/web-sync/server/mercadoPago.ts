@@ -17,10 +17,20 @@ const preferenceClient = new MpPreference(mpConfig);
 const preApprovalClient = new MpPreApproval(mpConfig);
 const paymentClient = new MpPayment(mpConfig);
 
-/** noazul:// deep link — expo-web-browser's openAuthSessionAsync resolves when the checkout redirects here. */
+/**
+ * Mercado Pago's Checkout Pro won't enable the "Pagar" button when back_urls
+ * isn't a real http(s) URL — a bare noazul:// custom scheme silently breaks
+ * it. So this points at our own /payment/return page instead, which does the
+ * actual noazul:// hand-off; expo-web-browser's openAuthSessionAsync still
+ * resolves correctly once that final redirect happens.
+ */
 function deepLink(status: "success" | "pending" | "failure"): string {
   const scheme = process.env.APP_DEEP_LINK_SCHEME ?? "noazul";
-  return `${scheme}://payment/return?status=${status}`;
+  const baseUrl = process.env.APP_BASE_URL;
+  if (!baseUrl) {
+    throw new Error("APP_BASE_URL não está configurada.");
+  }
+  return `${baseUrl}/payment/return?status=${status}&scheme=${scheme}`;
 }
 
 /** One-time Checkout Pro purchase — used for the LIFETIME plan. */
