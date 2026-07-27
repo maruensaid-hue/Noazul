@@ -57,6 +57,10 @@ export async function createLifetimePreference(params: {
         pending: deepLink("pending"),
         failure: deepLink("failure"),
       },
+      // Without this, Checkout Pro shows its own "payment approved" page and
+      // waits for the user to tap "Voltar à loja" instead of redirecting
+      // automatically — the app would never see the noazul:// return.
+      auto_return: "approved",
       notification_url: process.env.MERCADOPAGO_WEBHOOK_URL,
     },
   });
