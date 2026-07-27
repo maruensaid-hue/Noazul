@@ -9,7 +9,7 @@ import { LoadingState } from "../src/components/ui/LoadingState";
 import { useCurrentOffering, usePurchasePackage, useRestorePurchases } from "../src/features/billing/queries";
 import { annualSavingsPercent, findByType, packageTypeLabel } from "../src/features/billing/planPresentation";
 import { DIRECT_PLANS } from "../src/features/payments/directPlans";
-import { useCreateDirectPayment, useEntitlement, useRefreshEntitlement } from "../src/features/payments/queries";
+import { useCreateDirectPayment, useEntitlement } from "../src/features/payments/queries";
 import { isBillingConfigured } from "../src/services/purchases";
 import type { DirectPlanId } from "../src/services/syncApi";
 import { useAuthStore } from "../src/stores/authStore";
@@ -125,19 +125,16 @@ export default function PaywallScreen() {
   const [selectedDirectPlanId, setSelectedDirectPlanId] = useState<DirectPlanId>("ANNUAL");
   const createDirectPayment = useCreateDirectPayment();
   const entitlementQuery = useEntitlement();
-  const refreshEntitlement = useRefreshEntitlement();
 
   const handleDirectPayment = () => {
     createDirectPayment.mutate(selectedDirectPlanId, {
-      onSuccess: async ({ initPoint }) => {
-        const result = await WebBrowser.openAuthSessionAsync(initPoint, "noazul://payment/return");
-        refreshEntitlement();
-        if (result.type === "success") {
-          Alert.alert(
-            "Pagamento em processamento",
-            "Assim que a confirmação chegar do Mercado Pago, seu Premium é ativado automaticamente. Isso costuma levar só alguns instantes.",
-          );
-        }
+      onSuccess: ({ initPoint }) => {
+        // A plain browser tab, not openAuthSessionAsync's ephemeral "auth"
+        // session — the noazul://payment/return redirect at the end of
+        // checkout hands off to the app via the OS's normal deep-link
+        // handling (app/payment/return.tsx), which is what actually shows
+        // the outcome and refreshes entitlement — see that screen.
+        void WebBrowser.openBrowserAsync(initPoint);
       },
       onError: (error) => Alert.alert("Não foi possível iniciar o pagamento", error.message),
     });
