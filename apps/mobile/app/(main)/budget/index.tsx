@@ -103,10 +103,18 @@ export default function BudgetScreen() {
           categoryName={editingEntry.categoryName}
           initialLimitCents={editingEntry.limitCents}
           onSave={(limitCents) => {
-            upsertBudget.mutate({ categoryId: editingEntry.categoryId, yearMonth, limitCents });
+            upsertBudget.mutate(
+              { categoryId: editingEntry.categoryId, yearMonth, limitCents },
+              { onError: () => Alert.alert("Não foi possível salvar", "Tente novamente em instantes.") },
+            );
           }}
           onRemove={
-            editingEntry.budgetId ? () => deleteBudget.mutate(editingEntry.budgetId!) : undefined
+            editingEntry.budgetId
+              ? () =>
+                  deleteBudget.mutate(editingEntry.budgetId!, {
+                    onError: () => Alert.alert("Não foi possível remover", "Tente novamente em instantes."),
+                  })
+              : undefined
           }
           onClose={() => setEditingEntry(null)}
         />

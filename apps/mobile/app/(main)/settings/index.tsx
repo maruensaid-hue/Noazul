@@ -38,6 +38,14 @@ export default function SettingsScreen() {
         <Text className="text-gray-400 dark:text-gray-500">›</Text>
       </Pressable>
 
+      <Pressable
+        onPress={() => router.push("/(main)/categories")}
+        className="flex-row items-center justify-between border-b border-gray-100 px-4 py-4 dark:border-gray-800"
+      >
+        <Text className="text-base text-gray-900 dark:text-gray-50">Categorias</Text>
+        <Text className="text-gray-400 dark:text-gray-500">›</Text>
+      </Pressable>
+
       {isAuthConfigured() ? (
         <Pressable
           onPress={() => {

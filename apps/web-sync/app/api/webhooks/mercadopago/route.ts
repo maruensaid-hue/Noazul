@@ -1,7 +1,18 @@
 import { NextResponse, type NextRequest } from "next/server";
 
 import { prisma } from "../../../../server/db";
+import { sendPushNotification } from "../../../../server/expoPush";
 import { getMpPayment, getMpPreApproval, validateWebhookSignature } from "../../../../server/mercadoPago";
+
+async function notifyPremiumActivated(userId: string): Promise<void> {
+  const user = await prisma.user.findUnique({ where: { id: userId }, select: { pushToken: true } });
+  if (!user?.pushToken) return;
+  await sendPushNotification({
+    pushToken: user.pushToken,
+    title: "Pagamento aprovado!",
+    body: "Seu Premium do NoAzul já está ativo. Obrigado por assinar!",
+  });
+}
 
 /**
  * Mercado Pago webhook — https://www.mercadopago.com.br/developers/panel →
@@ -66,6 +77,7 @@ async function handlePaymentEvent(mpPaymentId: string): Promise<void> {
       where: { id: payment.userId },
       data: { isPremium: true, premiumUntil: null },
     });
+    await notifyPremiumActivated(payment.userId);
   }
 }
 
@@ -91,6 +103,7 @@ async function handlePreapprovalEvent(mpPreapprovalId: string): Promise<void> {
         premiumUntil: mpPreapproval.next_payment_date ? new Date(mpPreapproval.next_payment_date) : null,
       },
     });
+    await notifyPremiumActivated(payment.userId);
   } else if (status === "CANCELED") {
     await prisma.user.update({ where: { id: payment.userId }, data: { isPremium: false } });
   }

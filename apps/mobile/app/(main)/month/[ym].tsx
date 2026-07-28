@@ -206,12 +206,13 @@ export default function MonthScreen() {
         />
       )}
 
-      <Link
-        href={`/transaction/new?ym=${yearMonth}`}
-        className="absolute right-6 h-14 w-14 items-center justify-center rounded-full bg-brand-600 text-center text-2xl leading-[56px] text-white shadow-lg"
-        style={{ bottom: SHEET_COLLAPSED_HEIGHT + 16 }}
-      >
-        +
+      <Link href={`/transaction/new?ym=${yearMonth}`} asChild>
+        <Pressable
+          className="absolute right-6 h-14 w-14 items-center justify-center rounded-full bg-brand-600 shadow-lg"
+          style={{ bottom: SHEET_COLLAPSED_HEIGHT + 16 }}
+        >
+          <Text className="text-2xl font-bold text-white">+</Text>
+        </Pressable>
       </Link>
 
       {summaryQuery.data ? (

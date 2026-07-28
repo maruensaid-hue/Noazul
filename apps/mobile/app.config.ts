@@ -74,6 +74,17 @@ const config: ExpoConfig = {
       projectId: process.env.EAS_PROJECT_ID ?? "f4a6e092-a518-42be-9057-ba97484c6291",
     },
   },
+  // EAS Update (OTA): lets JS/asset-only changes reach installed builds
+  // without a new EAS Build + reinstall. "fingerprint" ties an update to the
+  // exact native module set it was published against, so an update never
+  // gets applied to a build whose native code doesn't match (see eas.json's
+  // per-profile "channel" for which builds pull from which update branch).
+  updates: {
+    url: "https://u.expo.dev/f4a6e092-a518-42be-9057-ba97484c6291",
+  },
+  runtimeVersion: {
+    policy: "fingerprint",
+  },
 };
 
 export default config;

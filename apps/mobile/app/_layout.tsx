@@ -16,6 +16,7 @@ import migrations from "../drizzle/migrations";
 import { db } from "../src/db/client";
 import { useAuthSync } from "../src/features/auth/useAuthSync";
 import { useLoginDeepLink } from "../src/features/auth/useLoginDeepLink";
+import { usePushTokenSync } from "../src/features/auth/usePushTokenSync";
 import { useAutoBackup } from "../src/features/backup/useAutoBackup";
 import { useBillingSync } from "../src/features/billing/useBillingSync";
 import { getActiveProfileId } from "../src/features/profiles/repository";
@@ -47,6 +48,7 @@ export default function RootLayout() {
   useBillingSync();
   useAuthSync();
   useLoginDeepLink();
+  usePushTokenSync();
 
   useEffect(() => {
     if (!migrated) return;

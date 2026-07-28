@@ -10,11 +10,14 @@ export const DEFAULT_PROFILE_NAME = "Casa";
 /** Categories every fresh profile starts with, matching common BR household expenses. */
 export const DEFAULT_CATEGORIES: readonly { name: string; color: string }[] = [
   { name: "Moradia", color: "#6366F1" },
+  { name: "Contas de Casa", color: "#0EA5E9" },
   { name: "Alimentação", color: "#F59E0B" },
   { name: "Transporte", color: "#3B82F6" },
   { name: "Saúde", color: "#EF4444" },
   { name: "Educação", color: "#10B981" },
   { name: "Lazer", color: "#EC4899" },
+  { name: "Cartão de Crédito", color: "#8B5CF6" },
+  { name: "Pensão", color: "#0D9488" },
   { name: "Salário", color: "#22C55E" },
   { name: "Outros", color: "#6B7280" },
 ];
