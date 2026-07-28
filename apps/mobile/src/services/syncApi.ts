@@ -44,3 +44,7 @@ export interface Entitlement {
 export function fetchEntitlement(): Promise<Entitlement> {
   return authFetch("/api/entitlement");
 }
+
+export function registerPushToken(pushToken: string): Promise<{ ok: boolean }> {
+  return authFetch("/api/push-token", { method: "POST", body: JSON.stringify({ pushToken }) });
+}
