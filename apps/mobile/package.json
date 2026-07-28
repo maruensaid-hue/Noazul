@@ -57,6 +57,7 @@
   },
   "devDependencies": {
     "@babel/core": "^7.29.7",
+    "@babel/plugin-transform-react-jsx": "^7.29.7",
     "@types/react": "~19.2.2",
     "babel-plugin-inline-import": "^3.0.0",
     "babel-preset-expo": "~57.0.3",
