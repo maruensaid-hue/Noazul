@@ -15,6 +15,7 @@ export const DEFAULT_CATEGORIES: readonly { name: string; color: string }[] = [
   { name: "Saúde", color: "#EF4444" },
   { name: "Educação", color: "#10B981" },
   { name: "Lazer", color: "#EC4899" },
+  { name: "Cartão de Crédito", color: "#8B5CF6" },
   { name: "Salário", color: "#22C55E" },
   { name: "Outros", color: "#6B7280" },
 ];
