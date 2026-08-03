@@ -1,8 +1,15 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
+import {
+  cancelSubscription,
+  createDirectPayment,
+  fetchEntitlement,
+  fetchSubscription,
+  isSyncApiConfigured,
+  type DirectPlanId,
+} from "../../services/syncApi";
 import { useAuthStore } from "../../stores/authStore";
 import { useBillingStore } from "../../stores/billingStore";
-import { createDirectPayment, fetchEntitlement, isSyncApiConfigured, type DirectPlanId } from "../../services/syncApi";
 
 export function useCreateDirectPayment() {
   return useMutation({
@@ -29,4 +36,28 @@ export function useEntitlement() {
 export function useRefreshEntitlement() {
   const queryClient = useQueryClient();
   return () => queryClient.invalidateQueries({ queryKey: ["payments", "entitlement"] });
+}
+
+/** Plan + payment history for the direct (Mercado Pago) payment path — see the subscription screen. */
+export function useSubscription() {
+  const session = useAuthStore((state) => state.session);
+
+  return useQuery({
+    queryKey: ["payments", "subscription", session?.user.id],
+    queryFn: fetchSubscription,
+    enabled: Boolean(session) && isSyncApiConfigured(),
+  });
+}
+
+export function useCancelSubscription() {
+  const queryClient = useQueryClient();
+  const setIsPremium = useBillingStore((state) => state.setIsPremium);
+
+  return useMutation({
+    mutationFn: cancelSubscription,
+    onSuccess: () => {
+      setIsPremium(false);
+      void queryClient.invalidateQueries({ queryKey: ["payments"] });
+    },
+  });
 }

@@ -48,3 +48,29 @@ export function fetchEntitlement(): Promise<Entitlement> {
 export function registerPushToken(pushToken: string): Promise<{ ok: boolean }> {
   return authFetch("/api/push-token", { method: "POST", body: JSON.stringify({ pushToken }) });
 }
+
+export type PaymentPlan = "MONTHLY" | "ANNUAL" | "LIFETIME";
+export type PaymentStatus = "PENDING" | "APPROVED" | "REJECTED" | "REFUNDED" | "CANCELED";
+
+export interface PaymentRecord {
+  id: string;
+  plan: PaymentPlan;
+  status: PaymentStatus;
+  amountCents: number;
+  createdAt: string;
+  mpPreapprovalId: string | null;
+}
+
+export interface SubscriptionInfo {
+  isPremium: boolean;
+  premiumUntil: string | null;
+  payments: PaymentRecord[];
+}
+
+export function fetchSubscription(): Promise<SubscriptionInfo> {
+  return authFetch("/api/subscription");
+}
+
+export function cancelSubscription(): Promise<{ ok: boolean }> {
+  return authFetch("/api/subscription/cancel", { method: "POST" });
+}

@@ -100,6 +100,11 @@ export async function createSubscriptionPreapproval(params: {
   return { id: response.id, initPoint: response.init_point };
 }
 
+/** Stops future charges on a recurring subscription — used by "Cancelar assinatura". */
+export async function cancelPreapproval(id: string) {
+  return preApprovalClient.update({ id, body: { status: "cancelled" } });
+}
+
 export async function getMpPayment(id: string) {
   return paymentClient.get({ id });
 }
