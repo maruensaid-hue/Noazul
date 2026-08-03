@@ -3,6 +3,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { prisma } from "../../../../server/db";
 import { sendPushNotification } from "../../../../server/expoPush";
 import { getMpPayment, getMpPreApproval, validateWebhookSignature } from "../../../../server/mercadoPago";
+import { clientIp, isRateLimited, rateLimitResponse } from "../../../../server/rateLimit";
 
 async function notifyPremiumActivated(userId: string): Promise<void> {
   const user = await prisma.user.findUnique({ where: { id: userId }, select: { pushToken: true } });
@@ -33,6 +34,12 @@ async function notifyPremiumActivated(userId: string): Promise<void> {
  * reasoned through, but hasn't run against production traffic yet.
  */
 export async function POST(request: NextRequest) {
+  // Generous limit — must not drop Mercado Pago's own retries, this only
+  // guards against a spam flood hitting the signature-validation + DB lookup.
+  if (isRateLimited(`webhook:mp:${clientIp(request)}`, 30, 60_000)) {
+    return rateLimitResponse();
+  }
+
   const xSignature = request.headers.get("x-signature");
   const xRequestId = request.headers.get("x-request-id");
   const dataId = request.nextUrl.searchParams.get("data.id");

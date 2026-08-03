@@ -5,12 +5,17 @@ import { requireUser, UnauthorizedError } from "../../../../server/auth";
 import { prisma } from "../../../../server/db";
 import { createLifetimePreference, createSubscriptionPreapproval } from "../../../../server/mercadoPago";
 import { PLAN_CONFIG, isSubscriptionPlan } from "../../../../server/plans";
+import { clientIp, isRateLimited, rateLimitResponse } from "../../../../server/rateLimit";
 
 const bodySchema = z.object({
   plan: z.string().refine(isSubscriptionPlan, "Plano inválido"),
 });
 
 export async function POST(request: NextRequest) {
+  if (isRateLimited(`payments:create:${clientIp(request)}`, 5, 60_000)) {
+    return rateLimitResponse();
+  }
+
   let user;
   try {
     user = await requireUser(request);
