@@ -4,6 +4,7 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 import "../global.css";
 
+import * as Sentry from "@sentry/react-native";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useMigrations } from "drizzle-orm/expo-sqlite/migrator";
 import { Stack } from "expo-router";
@@ -21,7 +22,10 @@ import { useAutoBackup } from "../src/features/backup/useAutoBackup";
 import { useBillingSync } from "../src/features/billing/useBillingSync";
 import { getActiveProfileId } from "../src/features/profiles/repository";
 import { useSyncPaymentReminders } from "../src/features/reminders/useSyncPaymentReminders";
+import { initSentry } from "../src/services/sentry";
 import { useProfileStore } from "../src/stores/profileStore";
+
+initSentry();
 
 const queryClient = new QueryClient();
 
@@ -38,7 +42,7 @@ function AutoBackupSync() {
   return null;
 }
 
-export default function RootLayout() {
+function RootLayout() {
   const { success: migrated, error: migrationError } = useMigrations(db, migrations);
   const [checkedProfile, setCheckedProfile] = useState(false);
   const [checkError, setCheckError] = useState<Error | null>(null);
@@ -83,3 +87,5 @@ export default function RootLayout() {
     </GestureHandlerRootView>
   );
 }
+
+export default Sentry.wrap(RootLayout);

@@ -64,6 +64,17 @@ const config: ExpoConfig = {
         cameraPermission: "O NoAzul usa a câmera para fotografar comprovantes de lançamentos.",
       },
     ],
+    [
+      "@sentry/react-native/expo",
+      {
+        organization: process.env.SENTRY_ORG,
+        project: process.env.SENTRY_PROJECT,
+        // Sourcemap upload needs a real auth token (see .env.example); without
+        // one this would fail the EAS build trying to authenticate, so it
+        // only turns on once SENTRY_AUTH_TOKEN is actually set.
+        disableAutoUpload: !process.env.SENTRY_AUTH_TOKEN,
+      },
+    ],
   ],
   experiments: {
     typedRoutes: true,
